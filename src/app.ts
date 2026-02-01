@@ -16,6 +16,8 @@ const app = new Elysia()
   .onError(({ path, error, code }) => {
     logger.error("%s\n%s", path, error);
     switch (code) {
+      case "NOT_FOUND":
+        return Response.redirect("/", 302);
       case "INTERNAL_SERVER_ERROR": {
         const message =
           config.env === "development"

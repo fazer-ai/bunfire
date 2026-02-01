@@ -26,6 +26,7 @@ export const rateLimitMiddleware = () =>
       "Rate limit exceeded. Please try again later.",
     ),
     skip: (request) => isStaticRequest(request),
+    scoping: "scoped",
   });
 
 export const strictRateLimitMiddleware = () =>
@@ -36,6 +37,7 @@ export const strictRateLimitMiddleware = () =>
       "errors.rateLimitExceeded",
       "Rate limit exceeded. Please try again later.",
     ),
+    scoping: "scoped",
   });
 
 export const staticRateLimitMiddleware = () =>
@@ -47,4 +49,5 @@ export const staticRateLimitMiddleware = () =>
       "Rate limit exceeded. Please try again later.",
     ),
     skip: (request) => !isStaticRequest(request),
+    scoping: "scoped",
   });
