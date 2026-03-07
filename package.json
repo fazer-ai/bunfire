@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@elysiajs/cookie": "^0.8.0",
-    "@elysiajs/cors": "^1.4.0",
+    "@elysiajs/cors": "^1.4.1",
     "@elysiajs/eden": "^1.4.5",
     "@elysiajs/jwt": "^1.4.0",
     "@elysiajs/static": "^1.4.7",
