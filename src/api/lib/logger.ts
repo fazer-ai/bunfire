@@ -47,22 +47,18 @@ export function deepSanitizeObject(
   return output;
 }
 
-let logger = pino({
-  level: "debug",
-  transport: {
-    targets:
-      config.env === "production"
-        ? [
-            {
-              level: config.logLevel,
-              target: "pino-pretty",
-              options: {
-                colorize: false,
-                translateTime: "SYS:standard",
-              } as PrettyOptions,
-            },
-          ]
-        : [
+// NOTE: In production, avoid pino transports (which use thread-stream worker threads)
+// because the compiled binary's virtual FS prevents resolving packages like real-require.
+// Write JSON to stdout instead — Docker/Coolify captures stdout natively.
+let logger = pino(
+  config.env === "production"
+    ? {
+        level: config.logLevel,
+      }
+    : {
+        level: "debug",
+        transport: {
+          targets: [
             {
               level: config.logLevel,
               target: "pino-pretty",
@@ -83,8 +79,9 @@ let logger = pino({
               },
             },
           ],
-  },
-});
+        },
+      },
+);
 
 if (config.env === "development") {
   logger = require("pino-caller")(logger, {
