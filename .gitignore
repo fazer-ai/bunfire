@@ -37,3 +37,6 @@ tmp/*
 !tmp/.keep
 
 /generated/prisma
+
+# Wrangler local state
+.wrangler

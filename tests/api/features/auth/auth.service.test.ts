@@ -45,6 +45,7 @@ describe("auth.service", () => {
         select: {
           id: true,
           email: true,
+          name: true,
           passwordHash: true,
           role: true,
         },

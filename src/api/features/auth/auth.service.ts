@@ -6,6 +6,7 @@ export async function getUserByEmail(email: string) {
     select: {
       id: true,
       email: true,
+      name: true,
       passwordHash: true,
       role: true,
     },
@@ -30,4 +31,11 @@ export async function verifyPassword(
   hash: string,
 ): Promise<boolean> {
   return Bun.password.verify(password, hash);
+}
+
+export async function updateLastLogin(userId: bigint) {
+  return prisma.user.update({
+    where: { id: userId },
+    data: { lastLoginAt: new Date() },
+  });
 }

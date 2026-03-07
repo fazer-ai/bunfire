@@ -1,4 +1,21 @@
 {
+  "admin": {
+    "actions": "Ações",
+    "admins": "Administradores",
+    "cannotDemoteSelf": "Não é possível rebaixar a si mesmo",
+    "createdAt": "Criado em",
+    "demote": "Rebaixar",
+    "email": "Email",
+    "lastLogin": "Último Login",
+    "name": "Nome",
+    "promote": "Promover",
+    "role": "Função",
+    "roleUpdated": "Função atualizada para {{role}}",
+    "roleUpdateFailed": "Falha ao atualizar função",
+    "searchUsers": "Buscar usuários por email...",
+    "title": "Painel Administrativo",
+    "totalUsers": "Total de Usuários"
+  },
   "auth": {
     "confirmPassword": "Confirmar Senha",
     "createAccount": "Criar Conta",
@@ -19,10 +36,19 @@
     "signupFailed": "Falha ao cadastrar"
   },
   "common": {
-    "loading": "Carregando..."
+    "hidePassword": "Esconder senha",
+    "next": "Próximo",
+    "pageOf": "{{page}} de {{total}}",
+    "previous": "Anterior",
+    "search": "Buscar",
+    "showPassword": "Mostrar senha"
   },
   "home": {
     "role": "Função: {{role}}",
     "welcome": "Bem-vindo, {{email}}!"
+  },
+  "nav": {
+    "admin": "Admin",
+    "home": "Início"
   }
 }

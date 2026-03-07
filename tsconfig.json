@@ -34,5 +34,5 @@
     "noPropertyAccessFromIndexSignature": false
   },
 
-  "exclude": ["dist", "node_modules", "tmp"]
+  "exclude": ["dist", "node_modules", "tmp", "workers"]
 }

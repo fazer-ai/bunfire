@@ -6,7 +6,9 @@ CREATE TABLE "users" (
     "id" BIGSERIAL NOT NULL,
     "email" TEXT NOT NULL,
     "password_hash" TEXT NOT NULL,
+    "name" TEXT,
     "role" "UserRole" NOT NULL DEFAULT 'USER',
+    "last_login_at" TIMESTAMP(3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")

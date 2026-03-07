@@ -12,3 +12,4 @@
 - Always use the `cn` utility when appropriate for component classNames.
 - For conditional classNames, always use the object syntax `cn("base", { "active": isActive })` instead of ternary operators.
 - Always check `.env.example` when adding new environment variables to ensure consistency.
+- Add `aria-*` attributes for accessibility on interactive elements.

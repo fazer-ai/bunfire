@@ -13,6 +13,9 @@ COPY . .
 ENV DATABASE_URL="postgres://postgres:postgres@localhost:5432/postgres"
 ENV NODE_ENV=production
 
+ARG BUN_PUBLIC_CDN_URL=""
+ENV BUN_PUBLIC_CDN_URL=$BUN_PUBLIC_CDN_URL
+
 # Generate Prisma client
 RUN bun prisma generate
 

@@ -1,7 +1,7 @@
 import { type FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router";
-import { Button } from "@/client/components";
+import { Button, Input } from "@/client/components";
 import { useAuth } from "@/client/contexts/AuthContext";
 import { api } from "@/client/lib/api";
 
@@ -62,7 +62,7 @@ export function SignupPage() {
 
         <form
           onSubmit={handleSubmit}
-          className="bg-bg-secondary p-6 rounded-xl border border-border space-y-4"
+          className="bg-bg-secondary p-8 rounded-2xl border border-border space-y-4"
         >
           {error && (
             <div className="bg-error-soft border border-error text-error px-4 py-2 rounded-lg text-sm">
@@ -77,13 +77,12 @@ export function SignupPage() {
             >
               {t("auth.email", "Email")}
             </label>
-            <input
+            <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full bg-bg-tertiary border border-border rounded-lg px-4 py-2 text-text-primary focus:outline-none focus:border-border-focus transition-colors placeholder-text-muted"
               placeholder={t("auth.emailPlaceholder", "you@example.com")}
             />
           </div>
@@ -95,19 +94,20 @@ export function SignupPage() {
             >
               {t("auth.password", "Password")}
             </label>
-            <input
+            <Input
               id="password"
               type="password"
+              showPasswordToggle
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={8}
-              className="w-full bg-bg-tertiary border border-border rounded-lg px-4 py-2 text-text-primary focus:outline-none focus:border-border-focus transition-colors placeholder-text-muted"
               placeholder="••••••••"
+              helperText={t(
+                "auth.passwordMinLength",
+                "Must be at least 8 characters",
+              )}
             />
-            <p className="text-text-muted text-xs mt-1">
-              {t("auth.passwordMinLength", "Must be at least 8 characters")}
-            </p>
           </div>
 
           <div>
@@ -117,14 +117,14 @@ export function SignupPage() {
             >
               {t("auth.confirmPassword", "Confirm Password")}
             </label>
-            <input
+            <Input
               id="confirmPassword"
               type="password"
+              showPasswordToggle
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
               minLength={8}
-              className="w-full bg-bg-tertiary border border-border rounded-lg px-4 py-2 text-text-primary focus:outline-none focus:border-border-focus transition-colors placeholder-text-muted"
               placeholder="••••••••"
             />
           </div>

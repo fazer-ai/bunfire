@@ -33,7 +33,7 @@ describe("Button", () => {
     render(<Button variant="danger">Danger</Button>);
 
     const button = screen.getByRole("button");
-    expect(button).toHaveClass("bg-error");
+    expect(button).toHaveClass("text-error");
   });
 
   test("is disabled when disabled prop is true", () => {

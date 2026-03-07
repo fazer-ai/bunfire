@@ -9,6 +9,7 @@ const {
   JWT_SECRET,
   CORS_ORIGIN,
   DATABASE_URL,
+  CDN_URL,
 } = process.env;
 
 const config = {
@@ -23,6 +24,16 @@ const config = {
   jwtSecret: JWT_SECRET || "change-me-in-production",
   corsOrigin: CORS_ORIGIN || "localhost:3000",
   databaseUrl: DATABASE_URL,
+  cdnUrl: CDN_URL || "",
 };
+
+if (
+  config.env === "production" &&
+  config.jwtSecret === "change-me-in-production"
+) {
+  throw new Error(
+    "⚠️  JWT_SECRET must be set in production to something other than the default.",
+  );
+}
 
 export default config;

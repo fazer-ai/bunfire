@@ -3,6 +3,7 @@ import {
   createUser,
   getUserByEmail,
   hashPassword,
+  updateLastLogin,
   verifyPassword,
 } from "@/api/features/auth/auth.service";
 import { authPlugin } from "@/api/lib/auth";
@@ -32,6 +33,7 @@ export const authController = new Elysia({ prefix: "/auth" })
         user: {
           id: user.id.toString(),
           email: user.email,
+          name: user.name,
           role: user.role,
         },
       };
@@ -71,11 +73,13 @@ export const authController = new Elysia({ prefix: "/auth" })
       }
 
       await setAuthCookie(user);
+      updateLastLogin(user.id);
 
       return {
         user: {
           id: user.id.toString(),
           email: user.email,
+          name: user.name,
           role: user.role,
         },
       };
@@ -98,6 +102,7 @@ export const authController = new Elysia({ prefix: "/auth" })
       user: {
         id: user.id.toString(),
         email: user.email,
+        name: user.name,
         role: user.role,
       },
     };

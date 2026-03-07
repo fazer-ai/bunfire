@@ -16,3 +16,21 @@ export function cn(...classes: ClassValue[]): string {
     })
     .join(" ");
 }
+
+export function formatDate(date: string | Date | null | undefined): string {
+  if (!date) return "-";
+  const d = date instanceof Date ? date : new Date(date);
+  if (Number.isNaN(d.getTime())) return "-";
+  return d.toLocaleDateString("en-US", { timeZone: "UTC" });
+}
+
+// NOTE: process.env.BUN_PUBLIC_CDN_URL is inlined at build time via define in build.ts
+const CDN_URL = (
+  (typeof process !== "undefined" && process.env.BUN_PUBLIC_CDN_URL) ||
+  ""
+).replace(/\/$/, "");
+
+export function getAssetUrl(path: string): string {
+  if (!CDN_URL) return path;
+  return `${CDN_URL}${path.startsWith("/") ? path : `/${path}`}`;
+}

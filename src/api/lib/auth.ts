@@ -11,12 +11,14 @@ const TOKEN_EXPIRY = "7d";
 
 export interface JWTPayload {
   userId: string;
+  email: string;
   role: UserRole;
 }
 
 export interface AuthUser {
   id: bigint;
   email: string;
+  name: string | null;
   role: UserRole;
 }
 
@@ -63,6 +65,7 @@ export const authPlugin = new Elysia({ name: "auth" })
           select: {
             id: true,
             email: true,
+            name: true,
             role: true,
           },
         });

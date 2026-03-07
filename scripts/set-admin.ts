@@ -26,8 +26,22 @@ async function main() {
   });
 
   if (!user) {
-    console.error(`User not found: ${email}`);
-    process.exit(1);
+    const password =
+      crypto.randomUUID().replace(/-/g, "") +
+      crypto.randomUUID().replace(/-/g, "").toUpperCase();
+    const passwordHash = await Bun.password.hash(password, {
+      algorithm: "bcrypt",
+      cost: 10,
+    });
+
+    await prisma.user.create({
+      data: { email, passwordHash, role: "ADMIN" },
+    });
+
+    console.log(`User created and set as admin.`);
+    console.log(`Email:    ${email}`);
+    console.log(`Password: ${password}`);
+    return;
   }
 
   if (user.role === "ADMIN") {

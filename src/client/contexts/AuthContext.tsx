@@ -1,3 +1,4 @@
+import { Loader2 } from "lucide-react";
 import {
   createContext,
   type ReactNode,
@@ -5,12 +6,13 @@ import {
   useEffect,
   useState,
 } from "react";
-import { useTranslation } from "react-i18next";
 import { api } from "@/client/lib/api";
+import { getAssetUrl } from "@/client/lib/utils";
 
 export interface User {
   id: string;
   email: string;
+  name: string | null;
   role: string;
 }
 
@@ -24,7 +26,6 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { t } = useTranslation();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -60,10 +61,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-bg-primary">
-        <div className="text-text-secondary">
-          {t("common.loading", "Loading...")}
-        </div>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-bg-primary">
+        <img
+          src={getAssetUrl("/assets/logo.png")}
+          alt="Logo"
+          className="h-10"
+        />
+        <Loader2 className="w-6 h-6 animate-spin text-text-secondary" />
       </div>
     );
   }

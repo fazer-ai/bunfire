@@ -6,6 +6,7 @@ import { authPlugin } from "@/api/lib/auth";
 const mockUser = {
   id: BigInt(1),
   email: "test@example.com",
+  name: null as string | null,
   passwordHash: "$2b$10$hashedpassword",
   role: "USER" as const,
 };

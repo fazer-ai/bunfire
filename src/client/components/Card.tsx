@@ -1,21 +1,19 @@
-import type { ReactNode } from "react";
+import type { HTMLAttributes, ReactNode } from "react";
+import { cn } from "@/client/lib/utils";
 
-interface CardProps {
+interface CardProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
-  title?: string;
-  className?: string;
 }
 
-export function Card({ children, title, className = "" }: CardProps) {
+export function Card({ children, className, ...props }: CardProps) {
   return (
     <div
-      className={`bg-bg-secondary p-6 rounded-xl border border-border ${className}`}
-    >
-      {title && (
-        <h3 className="text-lg font-semibold text-text-primary mb-4">
-          {title}
-        </h3>
+      className={cn(
+        "bg-bg-secondary p-6 rounded-xl border border-border",
+        className,
       )}
+      {...props}
+    >
       {children}
     </div>
   );

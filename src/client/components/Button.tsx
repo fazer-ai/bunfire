@@ -1,10 +1,13 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { cn } from "@/client/lib/utils";
 
 type ButtonVariant = "primary" | "secondary" | "danger";
+type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
   variant?: ButtonVariant;
+  size?: ButtonSize;
   loading?: boolean;
 }
 
@@ -12,22 +15,34 @@ const variantStyles: Record<ButtonVariant, string> = {
   primary: "bg-accent text-white hover:bg-accent-hover disabled:bg-accent/50",
   secondary:
     "bg-bg-tertiary text-text-primary hover:bg-bg-secondary border border-border",
-  danger: "bg-error text-white hover:bg-error/80 disabled:bg-error/50",
+  danger: "bg-bg-tertiary text-error hover:bg-error-soft border border-error",
+};
+
+const sizeStyles: Record<ButtonSize, string> = {
+  sm: "px-4 py-2 text-sm",
+  md: "px-6 py-3 text-[15px]",
+  lg: "px-8 py-3.5 text-base",
 };
 
 export function Button({
   children,
   variant = "primary",
+  size = "md",
   loading = false,
   disabled,
-  className = "",
+  className,
   ...props
 }: ButtonProps) {
   return (
     <button
       type="button"
       disabled={disabled || loading}
-      className={`px-4 py-2 rounded-lg font-medium transition-colors text-sm disabled:cursor-not-allowed ${variantStyles[variant]} ${className}`}
+      className={cn(
+        "inline-flex items-center justify-center shrink-0 rounded-lg font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-default",
+        variantStyles[variant],
+        sizeStyles[size],
+        className,
+      )}
       {...props}
     >
       {loading ? (

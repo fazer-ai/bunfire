@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import plugin from "bun-plugin-tailwind";
 import { existsSync } from "fs";
-import { rm } from "fs/promises";
+import { cp, rename, rm } from "fs/promises";
 import path from "path";
 
 if (process.argv.includes("--help") || process.argv.includes("-h")) {
@@ -35,7 +35,7 @@ Example:
 
 const toCamelCase = (str: string): string => str.replace(/-([a-z])/g, g => g[1]?.toUpperCase() ?? '');
 
-const parseValue = (value: string): any => {
+const parseValue = (value: string): unknown => {
   if (value === "true") return true;
   if (value === "false") return false;
 
@@ -108,7 +108,7 @@ const formatFileSize = (bytes: number): string => {
 console.log("\n🚀 Starting build process...\n");
 
 const cliConfig = parseArgs();
-const outdir = cliConfig.outdir || path.join(process.cwd(), "dist");
+const outdir = (cliConfig.outdir as string) || path.join(process.cwd(), "dist");
 
 if (existsSync(outdir)) {
   console.log(`🗑️ Cleaning previous build at ${outdir}`);
@@ -122,6 +122,11 @@ const entrypoints = [...new Bun.Glob("**.html").scanSync("public")]
   .filter(dir => !dir.includes("node_modules"));
 console.log(`📄 Found ${entrypoints.length} HTML ${entrypoints.length === 1 ? "file" : "files"} to process\n`);
 
+if (entrypoints.length === 0) {
+  console.error("❌ No HTML files found in public/ directory");
+  process.exit(1);
+}
+
 const result = await Bun.build({
   entrypoints,
   outdir,
@@ -129,13 +134,32 @@ const result = await Bun.build({
   minify: true,
   target: "browser",
   sourcemap: "none",
+  publicPath: process.env.BUN_PUBLIC_CDN_URL
+    ? `${process.env.BUN_PUBLIC_CDN_URL.replace(/\/$/, "")}/`
+    : undefined,
+  naming: {
+    entry: "[dir]/[name]-[hash].[ext]",
+    chunk: "[name]-[hash].[ext]",
+    asset: "[name]-[hash].[ext]",
+  },
   define: {
     "process.env.NODE_ENV": JSON.stringify("production"),
+    "process.env.BUN_PUBLIC_CDN_URL": JSON.stringify(
+      process.env.BUN_PUBLIC_CDN_URL || "",
+    ),
   },
   ...cliConfig,
 });
 
 const end = performance.now();
+
+if (!result.success) {
+  console.error("❌ Build failed:");
+  for (const log of result.logs) {
+    console.error(log);
+  }
+  process.exit(1);
+}
 
 const outputTable = result.outputs.map(output => ({
   File: path.relative(process.cwd(), output.path),
@@ -147,3 +171,24 @@ console.table(outputTable);
 const buildTime = (end - start).toFixed(2);
 
 console.log(`\n✅ Build completed in ${buildTime}ms\n`);
+
+for (const output of result.outputs) {
+  if (output.kind === "entry-point" && output.path.endsWith(".html")) {
+    const dir = path.dirname(output.path);
+    const originalName = path.basename(output.path).replace(/-[a-z0-9]+\.html$/, ".html");
+    const dest = path.join(dir, originalName);
+    if (output.path !== dest) {
+      await rename(output.path, dest);
+      console.log(`📝 Renamed ${path.basename(output.path)} → ${originalName}`);
+    }
+  }
+}
+
+const assetsSource = path.join(process.cwd(), "public", "assets");
+const assetsDest = path.join(outdir, "assets");
+
+if (existsSync(assetsSource)) {
+  console.log("📁 Copying static assets...");
+  await cp(assetsSource, assetsDest, { recursive: true });
+  console.log(`   └── Copied public/assets → dist/assets\n`);
+}
