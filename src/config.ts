@@ -24,7 +24,7 @@ const config = {
   jwtSecret: JWT_SECRET || "change-me-in-production",
   corsOrigin: CORS_ORIGIN || "localhost:3000",
   databaseUrl: DATABASE_URL,
-  cdnUrl: CDN_URL || "",
+  cdnUrl: CDN_URL || "http://localhost:3000",
 };
 
 if (
