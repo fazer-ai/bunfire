@@ -10,7 +10,7 @@ RUN bun install --frozen-lockfile
 COPY . .
 
 # NOTE: Set a dummy DATABASE_URL for Prisma code generation
-ENV DATABASE_URL="postgres://postgres:postgres@localhost:5432/postgres"
+ENV DATABASE_URL="postgres://postgres:postgres@localhost:5432/dummy"
 ENV NODE_ENV=production
 
 ARG BUN_PUBLIC_CDN_URL=""
