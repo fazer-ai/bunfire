@@ -15,9 +15,10 @@ const prisma = new PrismaClient({
 
 async function main() {
   const email = process.argv[2];
+  const passwordArg = process.argv[3];
 
   if (!email) {
-    console.error("Usage: bun scripts/set-admin.ts <email>");
+    console.error("Usage: bun scripts/set-admin.ts <email> [password]");
     process.exit(1);
   }
 
@@ -27,8 +28,9 @@ async function main() {
 
   if (!user) {
     const password =
+      passwordArg ??
       crypto.randomUUID().replace(/-/g, "") +
-      crypto.randomUUID().replace(/-/g, "").toUpperCase();
+        crypto.randomUUID().replace(/-/g, "").toUpperCase();
     const passwordHash = await Bun.password.hash(password, {
       algorithm: "bcrypt",
       cost: 10,
@@ -40,7 +42,20 @@ async function main() {
 
     console.log(`User created and set as admin.`);
     console.log(`Email:    ${email}`);
-    console.log(`Password: ${password}`);
+    if (!passwordArg) console.log(`Password: ${password}`);
+    return;
+  }
+
+  if (passwordArg) {
+    const passwordHash = await Bun.password.hash(passwordArg, {
+      algorithm: "bcrypt",
+      cost: 10,
+    });
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { role: "ADMIN", passwordHash },
+    });
+    console.log(`User ${email} set as admin with new password.`);
     return;
   }
 

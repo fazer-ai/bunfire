@@ -25,7 +25,7 @@ This is a full-stack TypeScript template using **Bun + Elysia + React 19 + Tailw
 | `bun check` | Lint + type-check + i18n + tests |
 | `bun prisma:migrate` | Run database migrations |
 | `bun prisma:generate` | Generate Prisma client |
-| `bun set-admin <email>` | Promote a user to admin |
+| `bun set-admin <email> [password]` | Promote a user to admin (creates the user if it doesn't exist; optionally sets password) |
 
 ## Project layout
 
