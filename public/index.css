@@ -126,6 +126,13 @@ body {
   animation: slide-in-up 0.3s ease-out;
 }
 
+/* Interactive elements get pointer cursor by default */
+button,
+select,
+[role="button"] {
+  cursor: pointer;
+}
+
 /* Hide browser-native password reveal/clear buttons */
 input[type="password"]::-ms-reveal,
 input[type="password"]::-ms-clear {

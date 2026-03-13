@@ -38,7 +38,7 @@ export function Button({
       type="button"
       disabled={disabled || loading}
       className={cn(
-        "inline-flex shrink-0 cursor-pointer items-center justify-center rounded-lg font-medium transition-colors disabled:cursor-default disabled:opacity-50",
+        "inline-flex shrink-0 items-center justify-center rounded-lg font-medium transition-colors disabled:cursor-default disabled:opacity-50",
         variantStyles[variant],
         sizeStyles[size],
         className,

@@ -218,7 +218,7 @@ export function AdminPage() {
                           className={cn(
                             "inline-flex items-center gap-1 rounded border border-border px-2 py-1 font-medium text-xs transition-colors",
                             {
-                              "cursor-pointer bg-bg-tertiary text-text-secondary hover:bg-bg-hover hover:text-text-primary":
+                              "bg-bg-tertiary text-text-secondary hover:bg-bg-hover hover:text-text-primary":
                                 !(
                                   user.id === currentUser?.id &&
                                   user.role === "ADMIN"

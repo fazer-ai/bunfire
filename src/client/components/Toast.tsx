@@ -98,7 +98,7 @@ function ToastItem({
       <button
         type="button"
         onClick={() => onRemove(toast.id)}
-        className="cursor-pointer p-1 transition-opacity hover:opacity-70"
+        className="p-1 transition-opacity hover:opacity-70"
         aria-label="Dismiss"
       >
         <X className="h-4 w-4" />

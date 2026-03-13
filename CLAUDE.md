@@ -47,5 +47,6 @@ This is a full-stack TypeScript template using **Bun + Elysia + React 19 + Tailw
 
 - Biome for linting and formatting (2-space indent, LF line endings)
 - Path alias: `@/` maps to `src/`
+- **Cursor styles**: `cursor: pointer` is set globally on `button`, `select`, `[role="button"]` in `public/index.css` — never use `cursor-pointer` on individual elements. Only use cursor utilities for overrides like `cursor-not-allowed` on disabled states.
 - Strict TypeScript
 - Husky pre-commit hooks run lint, type-check, and tests

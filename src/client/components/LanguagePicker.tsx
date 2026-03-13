@@ -32,7 +32,7 @@ export function LanguagePicker() {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-bg-tertiary px-3 py-1.5 font-medium text-sm text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary"
+        className="inline-flex items-center gap-2 rounded-lg border border-border bg-bg-tertiary px-3 py-1.5 font-medium text-sm text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary"
         aria-label="Change language"
       >
         <span className="text-base">{currentLang.flag}</span>
@@ -52,7 +52,7 @@ export function LanguagePicker() {
               type="button"
               onClick={() => handleSelect(lang.code)}
               className={cn(
-                "flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-sm transition-colors",
+                "flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors",
                 {
                   "bg-bg-hover text-text-primary":
                     lang.code === currentLang.code,

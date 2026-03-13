@@ -66,7 +66,7 @@ export function Layout({ children }: LayoutProps) {
             <button
               type="button"
               onClick={handleLogout}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-bg-tertiary px-3 py-1.5 font-medium text-sm text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary"
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-bg-tertiary px-3 py-1.5 font-medium text-sm text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary"
               aria-label={t("auth.logout", "Logout")}
             >
               <LogOut className="h-4 w-4" />
