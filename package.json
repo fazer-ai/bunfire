@@ -34,7 +34,7 @@
     "@prisma/adapter-pg": "^7.4.2",
     "@prisma/client": "^7.4.2",
     "bun-plugin-tailwind": "^0.1.2",
-    "elysia": "1.4.25",
+    "elysia": "^1.4.28",
     "elysia-helmet": "^3.0.0",
     "elysia-rate-limit": "^4.5.0",
     "i18next": "^25.8.14",
