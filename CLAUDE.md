@@ -47,6 +47,26 @@ This is a full-stack TypeScript template using **Bun + Elysia + React 19 + Tailw
 
 - Biome for linting and formatting (2-space indent, LF line endings)
 - Path alias: `@/` maps to `src/`
-- **Cursor styles**: `cursor: pointer` is set globally on `button`, `select`, `[role="button"]` in `public/index.css` — never use `cursor-pointer` on individual elements. Only use cursor utilities for overrides like `cursor-not-allowed` on disabled states.
 - Strict TypeScript
 - Husky pre-commit hooks run lint, type-check, and tests
+- Always run `bun check` after applying all code changes to ensure code quality and correctness
+- Only add comments when strictly necessary — never obvious/redundant ones. Comments must have a tag: `// TODO:`, `// NOTE:`, or `// FIXME:`
+- **Cursor styles**: `cursor: pointer` is set globally on `button`, `select`, `[role="button"]` in `public/index.css` — never use `cursor-pointer` on individual elements. Only use cursor utilities for overrides like `cursor-not-allowed` on disabled states
+- Use the `cn` utility for component classNames. For conditional classNames, use object syntax `cn("base", { "active": isActive })` — not ternary operators
+- Add `aria-*` attributes for accessibility on interactive elements
+- Always check `.env.example` when adding new environment variables to ensure consistency
+
+## Branding
+
+- "fazer.ai" is always lowercase. "fazer-ai" is acceptable in slugs/identifiers. Never "Fazer.ai" or "Fazer.AI"
+
+## i18n
+
+- Always update localization keys when adding or modifying user-facing text
+- Never add keys manually to localization files — use `bun i18n:extract`
+- Use magic comments like `// t('translation.key', 'Translation')` for localization keys inside static objects without access to `t`
+- Always update non-English localization files with correct translations
+
+## UX
+
+- Always consider UX for backend requests: loading states, debouncing, error handling, and user feedback
