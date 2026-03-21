@@ -13,6 +13,10 @@ This is a full-stack TypeScript template using **Bun + Elysia + React 19 + Tailw
    - **Admin page**: delete `src/client/pages/AdminPage.tsx`, remove its route from `src/client/App.tsx`, and remove `src/api/features/admin/` along with its mount in `src/app.ts`
 6. Re-generate this file with `/init` to get a CLAUDE.md tailored to your new project
 
+## Development setup
+
+- Before configuring `DATABASE_URL` in `.env`, check for existing PostgreSQL instances by scanning ports (e.g. `ss -tlnp | grep 543` or similar). Use port 5432 as the default, but if it is already in use by another service, pick the next available port (5433, 5434, etc.) and set `POSTGRES_PORT` accordingly in `.env`
+
 ## Common commands
 
 | Command | Description |
