@@ -40,3 +40,5 @@ tmp/*
 
 # Wrangler local state
 .wrangler
+
+.claude/scheduled_tasks.lock
