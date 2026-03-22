@@ -1,6 +1,6 @@
 import { type FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate } from "react-router";
+import { Link, Navigate, useNavigate } from "react-router";
 import { Button, Input } from "@/client/components";
 import { useAuth } from "@/client/contexts/AuthContext";
 import { api } from "@/client/lib/api";
@@ -8,12 +8,14 @@ import { api } from "@/client/lib/api";
 export function SignupPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { user, login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  if (user) return <Navigate to="/" replace />;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
