@@ -50,5 +50,10 @@
   "nav": {
     "admin": "Admin",
     "home": "Home"
+  },
+  "theme": {
+    "auto": "Auto",
+    "dark": "Dark",
+    "light": "Light"
   }
 }

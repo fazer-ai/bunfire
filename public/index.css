@@ -45,6 +45,9 @@
   /* Primary alias for accent */
   --color-primary: #3ea6ff;
 
+  /* Accent foreground (text on accent bg) */
+  --color-accent-foreground: #0f0f0f;
+
   /* Badge backgrounds (Notion-style solid) */
   --color-badge-primary: #263850;
   --color-badge-secondary: #363636;
@@ -73,9 +76,57 @@ body {
   background-color: var(--color-bg-primary);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
+  color-scheme: dark;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scrollbar-gutter: stable;
+}
+
+/* Light mode overrides */
+html[data-theme="light"] {
+  --color-bg-primary: #f1f1f1;
+  --color-bg-secondary: #e8e8e8;
+  --color-bg-tertiary: #dedede;
+  --color-bg-hover: #d2d2d2;
+
+  --color-text-primary: #0f0f0f;
+  --color-text-secondary: #555555;
+  --color-text-muted: #888888;
+  --color-text-placeholder: #aaaaaa;
+
+  --color-accent: #065fd4;
+  --color-accent-hover: #0550b5;
+  --color-accent-muted: #3ea6ff;
+  --color-accent-soft: #065fd4/15;
+  --color-accent-foreground: #f1f1f1;
+
+  --color-purple: #9a4dff;
+  --color-purple-soft: #9a4dff/15;
+
+  --color-border: #d2d2d2;
+  --color-border-hover: #bbbbbb;
+  --color-border-focus: #065fd4;
+
+  --color-error: #dc2626;
+  --color-error-soft: #dc2626/15;
+  --color-success: #16a34a;
+  --color-success-soft: #16a34a/15;
+  --color-warning: #ca8a04;
+  --color-warning-soft: #ca8a04/15;
+  --color-info: #065fd4;
+  --color-info-soft: #065fd4/15;
+
+  --color-primary: #065fd4;
+
+  --color-badge-primary: #dbeafe;
+  --color-badge-secondary: #e5e5e5;
+  --color-badge-success: #dcfce7;
+  --color-badge-warning: #fef3c7;
+  --color-badge-info: #dbeafe;
+
+  & body {
+    color-scheme: light;
+  }
 }
 
 /* Scrollbar styling */
@@ -136,6 +187,11 @@ body {
 
 .animate-slide-in-up {
   animation: slide-in-up 0.3s ease-out;
+}
+
+/* Logo glow effect */
+.hover\:drop-shadow-accent:hover {
+  filter: drop-shadow(0 0 2em color-mix(in srgb, var(--color-accent) 67%, transparent));
 }
 
 /* Interactive elements get pointer cursor by default */

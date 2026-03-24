@@ -7,6 +7,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import { useThemedAsset } from "@/client/contexts/ThemeContext";
 import { api } from "@/client/lib/api";
 import { getAssetUrl } from "@/client/lib/utils";
 
@@ -30,6 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const logoPath = useThemedAsset("/assets/logo.png");
   const clearUser = useCallback(() => setUser(null), []);
 
   useEffect(() => {
@@ -65,11 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   if (loading) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-bg-primary">
-        <img
-          src={getAssetUrl("/assets/logo.png")}
-          alt="Logo"
-          className="h-10"
-        />
+        <img src={getAssetUrl(logoPath)} alt="Logo" className="h-10" />
         <Loader2 className="h-6 w-6 animate-spin text-text-secondary" />
       </div>
     );

@@ -10,6 +10,15 @@
 </head>
 
 <body>
+  <script>
+    (function() {
+      var s = localStorage.getItem('@app:theme');
+      var t = 'dark';
+      if (s === 'light') t = 'light';
+      else if (s !== 'dark' && window.matchMedia('(prefers-color-scheme: light)').matches) t = 'light';
+      document.documentElement.dataset.theme = t;
+    })();
+  </script>
   <div id="root"></div>
   <script type="module" src="../src/client/frontend.tsx"></script>
 </body>

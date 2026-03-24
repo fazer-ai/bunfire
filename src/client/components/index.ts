@@ -6,4 +6,5 @@ export { LanguagePicker } from "./LanguagePicker";
 export { Layout } from "./Layout";
 export { Modal } from "./Modal";
 export { ProtectedRoute } from "./ProtectedRoute";
+export { ThemePicker } from "./ThemePicker";
 export { ToastProvider, useToast } from "./Toast";

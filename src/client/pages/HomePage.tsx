@@ -1,19 +1,21 @@
 import { useTranslation } from "react-i18next";
 import { Card } from "@/client/components";
 import { useAuth } from "@/client/contexts/AuthContext";
+import { useThemedAsset } from "@/client/contexts/ThemeContext";
 import { getAssetUrl } from "@/client/lib/utils";
 
 export function HomePage() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const logoPath = useThemedAsset("/assets/logo.png");
 
   return (
     <div className="mx-auto max-w-7xl text-center">
       <div className="mb-8 flex items-center justify-center gap-8">
         <img
-          src={getAssetUrl("/assets/logo.png")}
+          src={getAssetUrl(logoPath)}
           alt="Logo"
-          className="h-24 scale-120 p-6 transition-all duration-300 hover:drop-shadow-[0_0_2em_#3ea6ffaa]"
+          className="h-24 scale-120 p-6 transition-all duration-300 hover:drop-shadow-accent"
         />
       </div>
 

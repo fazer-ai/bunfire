@@ -3,8 +3,10 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useAuth } from "@/client/contexts/AuthContext";
+import { useThemedAsset } from "@/client/contexts/ThemeContext";
 import { getAssetUrl } from "@/client/lib/utils";
 import { LanguagePicker } from "./LanguagePicker";
+import { ThemePicker } from "./ThemePicker";
 
 interface LayoutProps {
   children: ReactNode;
@@ -13,6 +15,7 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
+  const logoPath = useThemedAsset("/assets/logo.png");
   const navigate = useNavigate();
   const location = useLocation();
   const isAdminPage = location.pathname === "/admin";
@@ -26,11 +29,7 @@ export function Layout({ children }: LayoutProps) {
     <div className="flex h-screen flex-col overflow-hidden bg-bg-primary">
       <header className="flex shrink-0 items-center justify-between border-border border-b bg-bg-secondary px-6 py-4">
         <Link to="/" className="flex items-center gap-3">
-          <img
-            src={getAssetUrl("/assets/logo.png")}
-            alt="Logo"
-            className="h-8 w-auto"
-          />
+          <img src={getAssetUrl(logoPath)} alt="Logo" className="h-8 w-auto" />
         </Link>
 
         <nav className="flex items-center gap-4">
@@ -57,6 +56,7 @@ export function Layout({ children }: LayoutProps) {
               </Link>
             ))}
 
+          <ThemePicker />
           <LanguagePicker />
 
           <div className="flex items-center gap-3">
