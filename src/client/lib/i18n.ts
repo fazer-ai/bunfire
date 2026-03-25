@@ -49,7 +49,10 @@ i18n.use(initReactI18next).init({
   },
 });
 
+document.documentElement.lang = i18n.language;
+
 i18n.on("languageChanged", (lng) => {
+  document.documentElement.lang = lng;
   try {
     localStorage.setItem(LANGUAGE_STORAGE_KEY, lng);
   } catch {
