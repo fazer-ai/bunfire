@@ -35,7 +35,7 @@
     "@prisma/client": "^7.5.0",
     "bun-plugin-tailwind": "^0.1.2",
     "elysia": "^1.4.28",
-    "elysia-helmet": "^3.0.0",
+    "elysia-helmet": "^3.1.0",
     "elysia-rate-limit": "^4.5.1",
     "i18next": "^25.10.5",
     "lucide-react": "^1.0.1",
