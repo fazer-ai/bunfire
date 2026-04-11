@@ -97,7 +97,7 @@ export function LoginPage() {
                 <GoogleSignInButton
                   clientId={providers.google.clientId}
                   onCredential={handleGoogleCredential}
-                  disabled={authPending}
+                  disabled={googlePending}
                   onError={() =>
                     setError(
                       t("auth.googleSignInFailed", "Google sign-in failed"),

@@ -1,4 +1,5 @@
 import { Elysia, t } from "elysia";
+import * as jose from "jose";
 import {
   createUser,
   getUserByEmail,
@@ -9,6 +10,8 @@ import {
 } from "@/api/features/auth/auth.service";
 import {
   GoogleEmailDomainNotAllowedError,
+  GoogleEmailNotVerifiedError,
+  GoogleIdMismatchError,
   upsertGoogleUser,
   verifyGoogleIdToken,
 } from "@/api/features/auth/google.service";
@@ -17,7 +20,7 @@ import { translate } from "@/api/lib/i18n";
 import logger from "@/api/lib/logger";
 import config from "@/config";
 
-export const authController = new Elysia({ prefix: "/auth" })
+const baseAuthController = new Elysia({ prefix: "/auth" })
   .use(authPlugin)
   .post(
     "/signup",
@@ -138,48 +141,50 @@ export const authController = new Elysia({ prefix: "/auth" })
   .post("/logout", ({ clearAuthCookie }) => {
     clearAuthCookie();
     return { success: true };
-  })
-  .post(
-    "/google",
-    async ({ body, set, setAuthCookie }) => {
-      if (!config.googleOAuthEnabled) {
-        set.status = 404;
-        return { error: "Not found" };
-      }
+  });
 
-      try {
-        const profile = await verifyGoogleIdToken(body.credential);
-        const user = await upsertGoogleUser(profile);
-        await setAuthCookie(user);
-        void updateLastLogin(user.id).catch((error) => {
-          logger.warn(
-            { error, userId: user.id.toString() },
-            "Failed to update last login",
-          );
-        });
+const googleAuthController = baseAuthController.post(
+  "/google",
+  async ({ body, set, setAuthCookie }) => {
+    try {
+      const profile = await verifyGoogleIdToken(body.credential);
+      const user = await upsertGoogleUser(profile);
+      await setAuthCookie(user);
+      void updateLastLogin(user.id).catch((error) => {
+        logger.warn(
+          { error, userId: user.id.toString() },
+          "Failed to update last login",
+        );
+      });
 
+      return {
+        user: {
+          id: user.id.toString(),
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        },
+      };
+    } catch (error) {
+      if (error instanceof GoogleEmailDomainNotAllowedError) {
+        logger.warn({ error }, "Google sign-in rejected: domain blocked");
+        set.status = 400;
         return {
-          user: {
-            id: user.id.toString(),
-            email: user.email,
-            name: user.name,
-            role: user.role,
-          },
+          error: translate(
+            "errors.emailDomainNotAllowed",
+            "Email domain is not allowed",
+          ),
         };
-      } catch (error) {
-        logger.warn({ error }, "Google sign-in failed");
-        if (error instanceof GoogleEmailDomainNotAllowedError) {
-          set.status = 400;
-          return {
-            error: translate(
-              "errors.emailDomainNotAllowed",
-              "Email domain is not allowed",
-            ),
-          };
-        }
-        // NOTE: GoogleEmailNotVerifiedError and GoogleIdMismatchError fall
-        // through to the generic 401 below on purpose, so we don't leak
-        // whether an account exists or how it is linked.
+      }
+      // NOTE: GoogleEmailNotVerifiedError, GoogleIdMismatchError, and jose's
+      // JWT/JWS verification failures all map to a generic 401 so we don't
+      // leak whether an account exists or how it is linked.
+      if (
+        error instanceof GoogleEmailNotVerifiedError ||
+        error instanceof GoogleIdMismatchError ||
+        error instanceof jose.errors.JOSEError
+      ) {
+        logger.warn({ error }, "Google sign-in rejected");
         set.status = 401;
         return {
           error: translate(
@@ -188,10 +193,26 @@ export const authController = new Elysia({ prefix: "/auth" })
           ),
         };
       }
-    },
-    {
-      body: t.Object({
-        credential: t.String({ minLength: 1 }),
-      }),
-    },
-  );
+      // NOTE: Unexpected operational failures (Prisma, JWKS network, cookie
+      // signing, etc.) bubble up so they surface as 5xx instead of getting
+      // misreported as bad credentials.
+      logger.error({ error }, "Unexpected error during Google sign-in");
+      throw error;
+    }
+  },
+  {
+    body: t.Object({
+      credential: t.String({ minLength: 1 }),
+    }),
+  },
+);
+
+// NOTE: When Google OAuth is disabled, the `/google` route is not registered at
+// all so schema validation never runs and Elysia returns its standard 404.
+// The exported type is always the enabled-mode controller so that the
+// generated treaty client keeps `auth.google.post(...)` available; the
+// frontend already gates calls behind `providers.google`.
+export const authController: typeof googleAuthController =
+  config.googleOAuthEnabled
+    ? googleAuthController
+    : (baseAuthController as unknown as typeof googleAuthController);

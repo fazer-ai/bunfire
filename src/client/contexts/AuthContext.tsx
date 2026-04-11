@@ -64,12 +64,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
           setProviders(next);
         }
+      } catch (error) {
+        // NOTE: Network/transient failures during boot must not produce an
+        // unhandled rejection. Swallow and leave user/providers as defaults so
+        // the app still renders the login screen instead of a stuck spinner.
+        console.error("Failed to load auth state", error);
       } finally {
         setLoading(false);
       }
     };
 
-    checkAuth();
+    void checkAuth();
   }, []);
 
   useEffect(() => {
