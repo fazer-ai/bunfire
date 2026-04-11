@@ -11,6 +11,7 @@ interface GoogleSignInButtonProps {
   clientId: string;
   onCredential: (credential: string) => void;
   onError?: (error: unknown) => void;
+  disabled?: boolean;
 }
 
 type Status = "loading" | "ready" | "error";
@@ -19,6 +20,7 @@ export function GoogleSignInButton({
   clientId,
   onCredential,
   onError,
+  disabled = false,
 }: GoogleSignInButtonProps) {
   const { resolvedTheme } = useTheme();
   const { i18n } = useTranslation();
@@ -33,6 +35,15 @@ export function GoogleSignInButton({
   }, [onCredential, onError]);
 
   useEffect(() => {
+    if (disabled) {
+      // NOTE: Tear down any existing button + One Tap so the SDK cannot keep
+      // prompting users while another auth flow is in progress.
+      window.google?.accounts?.id?.cancel();
+      window.google?.accounts?.id?.disableAutoSelect();
+      containerRef.current?.replaceChildren();
+      setStatus("loading");
+      return;
+    }
     let cancelled = false;
     let observer: MutationObserver | null = null;
     setStatus("loading");
@@ -98,7 +109,7 @@ export function GoogleSignInButton({
       observer?.disconnect();
       window.google?.accounts?.id?.cancel();
     };
-  }, [clientId, resolvedTheme, i18n.language]);
+  }, [clientId, resolvedTheme, i18n.language, disabled]);
 
   return (
     <div className={cn("relative min-h-11")}>

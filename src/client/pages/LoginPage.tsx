@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, Navigate, useNavigate } from "react-router";
 import { Button, GoogleSignInButton, Input } from "@/client/components";
@@ -20,19 +20,27 @@ export function LoginPage() {
     onError: setError,
   });
   const authPending = loading || googlePending;
+  // NOTE: Synchronous cross-method lock so a Google credential callback and a
+  // form submit cannot both pass their guards before React commits the pending
+  // state update.
+  const authInFlightRef = useRef(false);
 
   if (user) return <Navigate to="/" replace />;
 
   const handleGoogleCredential = (credential: string) => {
-    if (authPending) return;
+    if (authInFlightRef.current) return;
+    authInFlightRef.current = true;
     setError("");
-    return signInWithGoogle(credential);
+    void signInWithGoogle(credential).finally(() => {
+      authInFlightRef.current = false;
+    });
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (authPending) return;
+    if (authInFlightRef.current) return;
     setError("");
+    authInFlightRef.current = true;
     setLoading(true);
 
     try {
@@ -58,6 +66,7 @@ export function LoginPage() {
         t("auth.genericError", "Something went wrong. Please try again."),
       );
     } finally {
+      authInFlightRef.current = false;
       setLoading(false);
     }
   };
@@ -82,14 +91,13 @@ export function LoginPage() {
           {providers.google && (
             <>
               <div
-                className={cn({
-                  "pointer-events-none opacity-50": authPending,
-                })}
+                className={cn({ "opacity-50": authPending })}
                 aria-busy={authPending}
               >
                 <GoogleSignInButton
                   clientId={providers.google.clientId}
                   onCredential={handleGoogleCredential}
+                  disabled={authPending}
                   onError={() =>
                     setError(
                       t("auth.googleSignInFailed", "Google sign-in failed"),

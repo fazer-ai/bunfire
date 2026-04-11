@@ -22,7 +22,14 @@ export function isEmailDomainAllowed(email: string): boolean {
   return emailDomainMatches(email, config.allowedSignupDomains);
 }
 
-export function getSignupRoleForEmail(email: string): UserRole {
+// NOTE: `emailVerified` gates ADMIN promotion: password signups never count as
+// verified, so anyone holding an admin-domain address still needs to confirm
+// ownership via a verified channel (e.g. Google) before being elevated.
+export function getSignupRoleForEmail(
+  email: string,
+  emailVerified: boolean,
+): UserRole {
+  if (!emailVerified) return "USER";
   return emailDomainMatches(email, config.adminSignupDomains)
     ? "ADMIN"
     : "USER";
@@ -63,7 +70,7 @@ export async function createUser(
     data: {
       email: email.trim().toLowerCase(),
       passwordHash,
-      role: getSignupRoleForEmail(email),
+      role: getSignupRoleForEmail(email, false),
     },
     select: AUTH_USER_SELECT,
   });
@@ -79,7 +86,7 @@ export async function createGoogleUser(params: {
       email: params.email.trim().toLowerCase(),
       googleId: params.googleId,
       name: params.name,
-      role: getSignupRoleForEmail(params.email),
+      role: getSignupRoleForEmail(params.email, true),
     },
     select: AUTH_USER_SELECT,
   });

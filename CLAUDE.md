@@ -50,7 +50,7 @@ The gate applies to both `POST /api/auth/signup` (email/password) and first-time
 
 The `ADMIN_SIGNUP_DOMAINS` env var auto-promotes new accounts from listed domains to `ADMIN` on signup. It accepts a comma-separated list (e.g. `mycompany.io`). Leave empty for no auto-promotion (the default).
 
-Applies to both `POST /api/auth/signup` and first-time Google Sign-In. Only affects account creation: existing users keep their current role even if their domain is later added to the list. If `ALLOWED_SIGNUP_DOMAINS` is set, admin domains must be in the allowlist as well (otherwise registration fails before role assignment).
+Auto-promotion only fires when the email address has been verified by a trusted channel: first-time Google Sign-In with `email_verified: true`. Password signups via `POST /api/auth/signup` are always created as `USER` even if their domain matches, because there is no proof the registrant controls the address. If you need an admin from a password account, promote them manually with `bun set-admin <email>`. Only affects account creation: existing users keep their current role even if their domain is later added to the list. If `ALLOWED_SIGNUP_DOMAINS` is set, admin domains must be in the allowlist as well (otherwise registration fails before role assignment).
 
 ## Development setup
 

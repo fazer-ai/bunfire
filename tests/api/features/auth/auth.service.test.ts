@@ -80,8 +80,8 @@ describe("auth.service", () => {
       );
     });
 
-    test("creates user with ADMIN role when domain is in adminSignupDomains", async () => {
-      const original = config.adminSignupDomains;
+    test("never grants ADMIN on password signup even when domain matches", async () => {
+      const original = [...config.adminSignupDomains];
       config.adminSignupDomains = ["mycompany.io"];
       try {
         mockCreate.mockResolvedValueOnce(mockUser);
@@ -91,7 +91,7 @@ describe("auth.service", () => {
             data: {
               email: "founder@mycompany.io",
               passwordHash: "hashedPassword",
-              role: "ADMIN",
+              role: "USER",
             },
           }),
         );
@@ -124,22 +124,27 @@ describe("auth.service", () => {
 
     test("returns USER when adminSignupDomains is empty", () => {
       config.adminSignupDomains = [];
-      expect(getSignupRoleForEmail("anyone@anywhere.com")).toBe("USER");
+      expect(getSignupRoleForEmail("anyone@anywhere.com", true)).toBe("USER");
     });
 
-    test("returns ADMIN when domain matches", () => {
+    test("returns ADMIN when domain matches and email is verified", () => {
       config.adminSignupDomains = ["mycompany.io"];
-      expect(getSignupRoleForEmail("founder@mycompany.io")).toBe("ADMIN");
+      expect(getSignupRoleForEmail("founder@mycompany.io", true)).toBe("ADMIN");
+    });
+
+    test("never returns ADMIN when email is not verified", () => {
+      config.adminSignupDomains = ["mycompany.io"];
+      expect(getSignupRoleForEmail("founder@mycompany.io", false)).toBe("USER");
     });
 
     test("returns USER when domain does not match", () => {
       config.adminSignupDomains = ["mycompany.io"];
-      expect(getSignupRoleForEmail("user@other.com")).toBe("USER");
+      expect(getSignupRoleForEmail("user@other.com", true)).toBe("USER");
     });
 
     test("matches case-insensitively", () => {
       config.adminSignupDomains = ["mycompany.io"];
-      expect(getSignupRoleForEmail("Founder@MyCompany.IO")).toBe("ADMIN");
+      expect(getSignupRoleForEmail("Founder@MyCompany.IO", true)).toBe("ADMIN");
     });
   });
 
