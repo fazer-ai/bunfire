@@ -24,6 +24,17 @@ export const authController = new Elysia({ prefix: "/auth" })
     async ({ body, set, setAuthCookie }) => {
       const { email, password } = body;
 
+      // NOTE: Look up the existing user first so users on a domain that was
+      // later removed from ALLOWED_SIGNUP_DOMAINS still get the accurate
+      // "email already in use" response instead of a misleading domain error.
+      const existingUser = await getUserByEmail(email);
+      if (existingUser) {
+        set.status = 400;
+        return {
+          error: translate("errors.emailInUse", "Email already in use"),
+        };
+      }
+
       if (!isEmailDomainAllowed(email)) {
         set.status = 400;
         return {
@@ -31,14 +42,6 @@ export const authController = new Elysia({ prefix: "/auth" })
             "errors.emailDomainNotAllowed",
             "Email domain is not allowed",
           ),
-        };
-      }
-
-      const existingUser = await getUserByEmail(email);
-      if (existingUser) {
-        set.status = 400;
-        return {
-          error: translate("errors.emailInUse", "Email already in use"),
         };
       }
 
@@ -91,7 +94,12 @@ export const authController = new Elysia({ prefix: "/auth" })
       }
 
       await setAuthCookie(user);
-      updateLastLogin(user.id);
+      void updateLastLogin(user.id).catch((error) => {
+        logger.warn(
+          { error, userId: user.id.toString() },
+          "Failed to update last login",
+        );
+      });
 
       return {
         user: {

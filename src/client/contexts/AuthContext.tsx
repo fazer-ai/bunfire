@@ -18,8 +18,12 @@ export interface User {
   role: string;
 }
 
+export interface GoogleAuthProvider {
+  clientId: string;
+}
+
 export interface AuthProviders {
-  google?: { clientId: string };
+  google?: GoogleAuthProvider;
 }
 
 interface AuthContextType {
@@ -42,24 +46,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data, error } = await api.api.auth.me.get();
-      if (data && !error) {
-        if (data.user) setUser(data.user);
-        const next: AuthProviders = {};
-        if (
-          data.providers &&
-          typeof data.providers === "object" &&
-          "google" in data.providers &&
-          data.providers.google &&
-          typeof data.providers.google === "object" &&
-          "clientId" in data.providers.google &&
-          typeof data.providers.google.clientId === "string"
-        ) {
-          next.google = { clientId: data.providers.google.clientId };
+      try {
+        const { data, error } = await api.api.auth.me.get();
+        if (data && !error) {
+          if (data.user) setUser(data.user);
+          const next: AuthProviders = {};
+          if (
+            data.providers &&
+            typeof data.providers === "object" &&
+            "google" in data.providers &&
+            data.providers.google &&
+            typeof data.providers.google === "object" &&
+            "clientId" in data.providers.google &&
+            typeof data.providers.google.clientId === "string"
+          ) {
+            next.google = { clientId: data.providers.google.clientId };
+          }
+          setProviders(next);
         }
-        setProviders(next);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     checkAuth();
