@@ -99,9 +99,18 @@ export async function upsertGoogleUser(
     throw new GoogleEmailDomainNotAllowedError();
   }
 
-  return createGoogleUser({
-    googleId: profile.sub,
-    email: profile.email,
-    name: profile.name,
-  });
+  // NOTE: Two parallel first-time sign-ins for the same Google account can
+  // both pass the read checks above and race on insert. Catch the unique
+  // constraint conflict and re-resolve via googleId so the loser succeeds.
+  try {
+    return await createGoogleUser({
+      googleId: profile.sub,
+      email: profile.email,
+      name: profile.name,
+    });
+  } catch (error) {
+    const existing = await getUserByGoogleId(profile.sub);
+    if (existing) return existing;
+    throw error;
+  }
 }

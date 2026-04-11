@@ -7,7 +7,12 @@ function emailDomainMatches(email: string, domains: string[]): boolean {
   if (domains.length === 0) return false;
   const domain = email.trim().toLowerCase().split("@")[1];
   if (!domain) return false;
-  return domains.includes(domain);
+  // NOTE: Defensive normalization in case the configured list is mutated
+  // outside of parseDomainList (e.g. tests).
+  const normalized = new Set(
+    domains.map((d) => d.trim().toLowerCase()).filter(Boolean),
+  );
+  return normalized.has(domain);
 }
 
 export function isEmailDomainAllowed(email: string): boolean {

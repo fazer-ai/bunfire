@@ -16,11 +16,27 @@ const {
   ADMIN_SIGNUP_DOMAINS,
 } = process.env;
 
-const parseDomainList = (raw: string | undefined): string[] =>
-  (raw ?? "")
+// NOTE: Strict-but-permissive domain pattern: at least one label, dot, and a 2+
+// letter TLD. Rejects "@example.com", "foo", "example.", values with slashes.
+const DOMAIN_RE = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
+
+const parseDomainList = (
+  raw: string | undefined,
+  envName: string,
+): string[] => {
+  const values = (raw ?? "")
     .split(",")
-    .map((d) => d.trim().toLowerCase())
+    .map((d) => d.trim().toLowerCase().replace(/^@+/, ""))
     .filter(Boolean);
+
+  for (const domain of values) {
+    if (!DOMAIN_RE.test(domain)) {
+      throw new Error(`Invalid domain "${domain}" in ${envName}`);
+    }
+  }
+
+  return values;
+};
 
 const googleClientId = (GOOGLE_CLIENT_ID ?? "").trim();
 
@@ -40,8 +56,14 @@ const config = {
   cdnUrl: CDN_URL || "http://localhost:3000",
   googleClientId,
   googleOAuthEnabled: googleClientId.length > 0,
-  allowedSignupDomains: parseDomainList(ALLOWED_SIGNUP_DOMAINS),
-  adminSignupDomains: parseDomainList(ADMIN_SIGNUP_DOMAINS),
+  allowedSignupDomains: parseDomainList(
+    ALLOWED_SIGNUP_DOMAINS,
+    "ALLOWED_SIGNUP_DOMAINS",
+  ),
+  adminSignupDomains: parseDomainList(
+    ADMIN_SIGNUP_DOMAINS,
+    "ADMIN_SIGNUP_DOMAINS",
+  ),
 };
 
 if (config.env === "production") {
