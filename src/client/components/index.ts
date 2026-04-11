@@ -1,6 +1,7 @@
 export { Badge } from "./Badge";
 export { Button } from "./Button";
 export { Card } from "./Card";
+export { GoogleSignInButton } from "./GoogleSignInButton";
 export { Input } from "./Input";
 export { LanguagePicker } from "./LanguagePicker";
 export { Layout } from "./Layout";

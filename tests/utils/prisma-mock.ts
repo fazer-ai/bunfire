@@ -3,7 +3,8 @@ import { mock } from "bun:test";
 export const mockUser = {
   id: BigInt(1),
   email: "test@example.com",
-  passwordHash: "$2b$10$hashedpassword",
+  passwordHash: "$2b$10$hashedpassword" as string | null,
+  googleId: null as string | null,
   name: null as string | null,
   role: "USER" as const,
   lastLoginAt: null as Date | null,
@@ -14,6 +15,7 @@ export const mockUser = {
 export type MockUser = typeof mockUser | null;
 
 export const mockFindFirst = mock(() => Promise.resolve(null as MockUser));
+export const mockFindUnique = mock(() => Promise.resolve(null as MockUser));
 export const mockCreate = mock(() => Promise.resolve(mockUser));
 export const mockUpdate = mock(() => Promise.resolve(mockUser));
 export const mockQueryRaw = mock(() => Promise.resolve([{ 1: 1 }]));
@@ -21,6 +23,7 @@ export const mockQueryRaw = mock(() => Promise.resolve([{ 1: 1 }]));
 export const prismaMock = {
   user: {
     findFirst: mockFindFirst,
+    findUnique: mockFindUnique,
     create: mockCreate,
     update: mockUpdate,
   },
@@ -35,6 +38,7 @@ export function setupPrismaMock() {
 
 export function resetPrismaMocks() {
   mockFindFirst.mockReset();
+  mockFindUnique.mockReset();
   mockCreate.mockReset();
   mockUpdate.mockReset();
   mockQueryRaw.mockReset();

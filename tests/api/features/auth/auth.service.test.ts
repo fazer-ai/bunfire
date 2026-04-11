@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test } from "bun:test";
+import config from "@/config";
 import {
   mockCreate,
   mockFindFirst,
@@ -9,8 +10,14 @@ import {
 
 setupPrismaMock();
 
-const { getUserByEmail, createUser, hashPassword, verifyPassword } =
-  await import("@/api/features/auth/auth.service");
+const {
+  getUserByEmail,
+  createUser,
+  hashPassword,
+  verifyPassword,
+  isEmailDomainAllowed,
+  getSignupRoleForEmail,
+} = await import("@/api/features/auth/auth.service");
 
 describe("auth.service", () => {
   beforeEach(() => {
@@ -54,7 +61,7 @@ describe("auth.service", () => {
   });
 
   describe("createUser", () => {
-    test("creates user with trimmed lowercase email", async () => {
+    test("creates user with trimmed lowercase email and USER role by default", async () => {
       const createdUser = { ...mockUser, email: "new@example.com" };
       mockCreate.mockResolvedValueOnce(createdUser);
 
@@ -65,8 +72,27 @@ describe("auth.service", () => {
         data: {
           email: "new@example.com",
           passwordHash: "hashedPassword",
+          role: "USER",
         },
       });
+    });
+
+    test("creates user with ADMIN role when domain is in adminSignupDomains", async () => {
+      const original = config.adminSignupDomains;
+      config.adminSignupDomains = ["mycompany.io"];
+      try {
+        mockCreate.mockResolvedValueOnce(mockUser);
+        await createUser("founder@mycompany.io", "hashedPassword");
+        expect(mockCreate).toHaveBeenCalledWith({
+          data: {
+            email: "founder@mycompany.io",
+            passwordHash: "hashedPassword",
+            role: "ADMIN",
+          },
+        });
+      } finally {
+        config.adminSignupDomains = original;
+      }
     });
 
     test("returns created user with all fields", async () => {
@@ -78,6 +104,34 @@ describe("auth.service", () => {
       expect(result).toHaveProperty("email");
       expect(result).toHaveProperty("passwordHash");
       expect(result).toHaveProperty("role");
+    });
+  });
+
+  describe("getSignupRoleForEmail", () => {
+    const originalAdmin = config.adminSignupDomains;
+
+    beforeEach(() => {
+      config.adminSignupDomains = originalAdmin;
+    });
+
+    test("returns USER when adminSignupDomains is empty", () => {
+      config.adminSignupDomains = [];
+      expect(getSignupRoleForEmail("anyone@anywhere.com")).toBe("USER");
+    });
+
+    test("returns ADMIN when domain matches", () => {
+      config.adminSignupDomains = ["mycompany.io"];
+      expect(getSignupRoleForEmail("founder@mycompany.io")).toBe("ADMIN");
+    });
+
+    test("returns USER when domain does not match", () => {
+      config.adminSignupDomains = ["mycompany.io"];
+      expect(getSignupRoleForEmail("user@other.com")).toBe("USER");
+    });
+
+    test("matches case-insensitively", () => {
+      config.adminSignupDomains = ["mycompany.io"];
+      expect(getSignupRoleForEmail("Founder@MyCompany.IO")).toBe("ADMIN");
     });
   });
 
@@ -97,6 +151,37 @@ describe("auth.service", () => {
       const hash2 = await hashPassword(password);
 
       expect(hash1).not.toBe(hash2);
+    });
+  });
+
+  describe("isEmailDomainAllowed", () => {
+    const originalAllowed = config.allowedSignupDomains;
+
+    beforeEach(() => {
+      config.allowedSignupDomains = originalAllowed;
+    });
+
+    test("allows any domain when allowlist is empty", () => {
+      config.allowedSignupDomains = [];
+      expect(isEmailDomainAllowed("user@anything.com")).toBe(true);
+      expect(isEmailDomainAllowed("user@example.io")).toBe(true);
+    });
+
+    test("allows only listed domains when allowlist is set", () => {
+      config.allowedSignupDomains = ["example.com", "acme.io"];
+      expect(isEmailDomainAllowed("user@example.com")).toBe(true);
+      expect(isEmailDomainAllowed("user@acme.io")).toBe(true);
+      expect(isEmailDomainAllowed("user@other.com")).toBe(false);
+    });
+
+    test("matches case-insensitively and trims input", () => {
+      config.allowedSignupDomains = ["example.com"];
+      expect(isEmailDomainAllowed("  User@EXAMPLE.COM  ")).toBe(true);
+    });
+
+    test("rejects malformed emails when allowlist is set", () => {
+      config.allowedSignupDomains = ["example.com"];
+      expect(isEmailDomainAllowed("not-an-email")).toBe(false);
     });
   });
 

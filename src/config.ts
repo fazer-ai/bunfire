@@ -11,7 +11,16 @@ const {
   CORS_ORIGIN,
   DATABASE_URL,
   CDN_URL,
+  GOOGLE_CLIENT_ID,
+  ALLOWED_SIGNUP_DOMAINS,
+  ADMIN_SIGNUP_DOMAINS,
 } = process.env;
+
+const parseDomainList = (raw: string | undefined): string[] =>
+  (raw ?? "")
+    .split(",")
+    .map((d) => d.trim().toLowerCase())
+    .filter(Boolean);
 
 const config = {
   packageInfo: {
@@ -27,6 +36,10 @@ const config = {
   corsOrigin: CORS_ORIGIN || "localhost:3000",
   databaseUrl: DATABASE_URL,
   cdnUrl: CDN_URL || "http://localhost:3000",
+  googleClientId: GOOGLE_CLIENT_ID || "",
+  googleOAuthEnabled: Boolean(GOOGLE_CLIENT_ID),
+  allowedSignupDomains: parseDomainList(ALLOWED_SIGNUP_DOMAINS),
+  adminSignupDomains: parseDomainList(ADMIN_SIGNUP_DOMAINS),
 };
 
 if (config.env === "production") {

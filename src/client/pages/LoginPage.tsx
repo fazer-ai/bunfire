@@ -1,20 +1,42 @@
 import { type FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, Navigate, useNavigate } from "react-router";
-import { Button, Input } from "@/client/components";
+import { Button, GoogleSignInButton, Input } from "@/client/components";
 import { useAuth } from "@/client/contexts/AuthContext";
 import { api } from "@/client/lib/api";
 
 export function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user, login } = useAuth();
+  const { user, login, providers } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   if (user) return <Navigate to="/" replace />;
+
+  const handleGoogleCredential = async (credential: string) => {
+    setError("");
+    try {
+      const { data, error: apiError } = await api.api.auth.google.post({
+        credential,
+      });
+      if (apiError) {
+        setError(
+          (apiError.value as { error?: string })?.error ||
+            t("auth.googleSignInFailed", "Google sign-in failed"),
+        );
+        return;
+      }
+      if (data?.user) {
+        login(data.user);
+        navigate("/");
+      }
+    } catch {
+      setError(t("auth.googleSignInFailed", "Google sign-in failed"));
+    }
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -63,6 +85,27 @@ export function LoginPage() {
             <div className="rounded-lg border border-error bg-error-soft px-4 py-2 text-error text-sm">
               {error}
             </div>
+          )}
+
+          {providers.google && (
+            <>
+              <GoogleSignInButton
+                clientId={providers.google.clientId}
+                onCredential={handleGoogleCredential}
+                onError={() =>
+                  setError(
+                    t("auth.googleSignInFailed", "Google sign-in failed"),
+                  )
+                }
+              />
+              <div className="flex items-center gap-3">
+                <div className="h-px flex-1 bg-border" />
+                <span className="text-text-secondary text-xs uppercase">
+                  {t("auth.or", "or")}
+                </span>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+            </>
           )}
 
           <div>

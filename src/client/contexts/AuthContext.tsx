@@ -18,9 +18,14 @@ export interface User {
   role: string;
 }
 
+export interface AuthProviders {
+  google?: { clientId: string };
+}
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  providers: AuthProviders;
   login: (user: User) => void;
   logout: () => Promise<void>;
 }
@@ -29,6 +34,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [providers, setProviders] = useState<AuthProviders>({});
   const [loading, setLoading] = useState(true);
 
   const logoPath = useThemedAsset("/assets/logo.png");
@@ -37,8 +43,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       const { data, error } = await api.api.auth.me.get();
-      if (data?.user && !error) {
-        setUser(data.user);
+      if (data && !error) {
+        if (data.user) setUser(data.user);
+        if (data.providers) setProviders(data.providers as AuthProviders);
       }
       setLoading(false);
     };
@@ -74,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, providers, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

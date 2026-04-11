@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 import { treaty } from "@elysiajs/eden";
 import { Elysia } from "elysia";
+import config from "@/config";
 import {
   mockCreate,
   mockFindFirst,
@@ -141,12 +142,48 @@ describe("authController", () => {
   });
 
   describe("GET /auth/me", () => {
-    test("returns 401 when not authenticated", async () => {
+    test("returns null user and providers when not authenticated", async () => {
       const api = createTestClient();
       const response = await api.auth.me.get();
 
+      expect(response.status).toBe(200);
+      expect(response.data?.user).toBeNull();
+      expect(response.data).toHaveProperty("providers");
+    });
+  });
+
+  describe("POST /auth/login with OAuth-only user", () => {
+    test("returns 401 without leaking account type", async () => {
+      const oauthOnlyUser = { ...mockUser, passwordHash: null };
+      mockFindFirst.mockResolvedValueOnce(oauthOnlyUser);
+
+      const api = createTestClient();
+      const response = await api.auth.login.post({
+        email: "test@example.com",
+        password: "anypassword",
+      });
+
       expect(response.status).toBe(401);
-      expect(response.error?.value).toHaveProperty("error", "Unauthorized");
+      expect(response.error?.value).toHaveProperty(
+        "error",
+        "Invalid email or password",
+      );
+    });
+  });
+
+  describe("POST /auth/google", () => {
+    test("returns 404 when Google OAuth is not configured", async () => {
+      const original = config.googleOAuthEnabled;
+      config.googleOAuthEnabled = false;
+      try {
+        const api = createTestClient();
+        const response = await api.auth.google.post({
+          credential: "any.credential.here",
+        });
+        expect(response.status).toBe(404);
+      } finally {
+        config.googleOAuthEnabled = original;
+      }
     });
   });
 

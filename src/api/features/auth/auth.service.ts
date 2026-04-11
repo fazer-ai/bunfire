@@ -1,15 +1,49 @@
+import type { UserRole } from "@/../generated/prisma/client";
+import type { AuthUser } from "@/api/lib/auth";
 import prisma from "@/api/lib/prisma";
+import config from "@/config";
+
+function emailDomainMatches(email: string, domains: string[]): boolean {
+  if (domains.length === 0) return false;
+  const domain = email.trim().toLowerCase().split("@")[1];
+  if (!domain) return false;
+  return domains.includes(domain);
+}
+
+export function isEmailDomainAllowed(email: string): boolean {
+  if (config.allowedSignupDomains.length === 0) return true;
+  return emailDomainMatches(email, config.allowedSignupDomains);
+}
+
+export function getSignupRoleForEmail(email: string): UserRole {
+  return emailDomainMatches(email, config.adminSignupDomains)
+    ? "ADMIN"
+    : "USER";
+}
+
+const AUTH_USER_SELECT = {
+  id: true,
+  email: true,
+  name: true,
+  role: true,
+} as const;
 
 export async function getUserByEmail(email: string) {
   return prisma.user.findFirst({
     where: { email: { equals: email.trim(), mode: "insensitive" } },
     select: {
-      id: true,
-      email: true,
-      name: true,
+      ...AUTH_USER_SELECT,
       passwordHash: true,
-      role: true,
     },
+  });
+}
+
+export async function getUserByGoogleId(
+  googleId: string,
+): Promise<AuthUser | null> {
+  return prisma.user.findUnique({
+    where: { googleId },
+    select: AUTH_USER_SELECT,
   });
 }
 
@@ -18,7 +52,35 @@ export async function createUser(email: string, passwordHash: string) {
     data: {
       email: email.trim().toLowerCase(),
       passwordHash,
+      role: getSignupRoleForEmail(email),
     },
+  });
+}
+
+export async function createGoogleUser(params: {
+  googleId: string;
+  email: string;
+  name: string | null;
+}): Promise<AuthUser> {
+  return prisma.user.create({
+    data: {
+      email: params.email.trim().toLowerCase(),
+      googleId: params.googleId,
+      name: params.name,
+      role: getSignupRoleForEmail(params.email),
+    },
+    select: AUTH_USER_SELECT,
+  });
+}
+
+export async function linkGoogleIdToUser(
+  userId: bigint,
+  googleId: string,
+): Promise<AuthUser> {
+  return prisma.user.update({
+    where: { id: userId },
+    data: { googleId },
+    select: AUTH_USER_SELECT,
   });
 }
 
