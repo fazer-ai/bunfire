@@ -29,11 +29,12 @@ On first sign-in, a new user is created with `password_hash: NULL` and `role: US
 
 ### Remove completely
 
-- Delete `src/api/features/auth/google.service.ts`, `src/client/lib/google.ts`, `src/client/components/GoogleSignInButton.tsx`
+- Delete `src/api/features/auth/google.service.ts`, `src/client/lib/google.ts`, `src/client/components/GoogleSignInButton.tsx`, `src/client/hooks/useGoogleSignIn.ts`
+- If no other code uses it, delete `src/client/lib/types.ts` (it was introduced for `ApiErrorPayload` shared between Login/Signup)
 - Remove the `POST /auth/google` route and the `providers` field in `GET /auth/me` from `src/api/features/auth/auth.controller.ts`
 - Drop the Google-related helpers (`getUserByGoogleId`, `createGoogleUser`, `linkGoogleIdToUser`) from `src/api/features/auth/auth.service.ts`
-- Revert the Prisma schema: restore `passwordHash` to non-nullable, drop the `googleId` field, write a new migration (`ALTER TABLE "users" ALTER COLUMN "password_hash" SET NOT NULL; ALTER TABLE "users" DROP COLUMN "google_id";`)
-- Remove the Google button and `handleGoogleCredential` from `LoginPage.tsx` and `SignupPage.tsx`, and the `providers` state from `AuthContext.tsx`
+- Revert the Prisma schema: restore `passwordHash` to non-nullable, drop the `googleId` field, drop the `users_auth_method_check` constraint, and write a new migration (`ALTER TABLE "users" DROP CONSTRAINT "users_auth_method_check"; ALTER TABLE "users" ALTER COLUMN "password_hash" SET NOT NULL; ALTER TABLE "users" DROP COLUMN "google_id";`)
+- Remove the Google button, `handleGoogleCredential`, and `useGoogleSignIn` import + usage from `LoginPage.tsx` and `SignupPage.tsx`, and the `providers` state from `AuthContext.tsx`
 - Remove `GOOGLE_CLIENT_ID` from `.env.example`, `googleClientId`/`googleOAuthEnabled` from `src/config.ts`
 - `bun remove jose`
 - Remove `auth.or`, `auth.googleSignInFailed` from client locales and `errors.googleSignInFailed` from api locales

@@ -69,13 +69,15 @@ describe("auth.service", () => {
       const result = await createUser("  NEW@EXAMPLE.COM  ", "hashedPassword");
 
       expect(result).toEqual(createdUser);
-      expect(mockCreate).toHaveBeenCalledWith({
-        data: {
-          email: "new@example.com",
-          passwordHash: "hashedPassword",
-          role: "USER",
-        },
-      });
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: {
+            email: "new@example.com",
+            passwordHash: "hashedPassword",
+            role: "USER",
+          },
+        }),
+      );
     });
 
     test("creates user with ADMIN role when domain is in adminSignupDomains", async () => {
@@ -84,27 +86,28 @@ describe("auth.service", () => {
       try {
         mockCreate.mockResolvedValueOnce(mockUser);
         await createUser("founder@mycompany.io", "hashedPassword");
-        expect(mockCreate).toHaveBeenCalledWith({
-          data: {
-            email: "founder@mycompany.io",
-            passwordHash: "hashedPassword",
-            role: "ADMIN",
-          },
-        });
+        expect(mockCreate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            data: {
+              email: "founder@mycompany.io",
+              passwordHash: "hashedPassword",
+              role: "ADMIN",
+            },
+          }),
+        );
       } finally {
         config.adminSignupDomains = original;
       }
     });
 
-    test("returns created user with all fields", async () => {
+    test("requests sanitized projection without passwordHash", async () => {
       mockCreate.mockResolvedValueOnce(mockUser);
-
-      const result = await createUser("test@example.com", "hashedPassword");
-
-      expect(result).toHaveProperty("id");
-      expect(result).toHaveProperty("email");
-      expect(result).toHaveProperty("passwordHash");
-      expect(result).toHaveProperty("role");
+      await createUser("test@example.com", "hashedPassword");
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          select: { id: true, email: true, name: true, role: true },
+        }),
+      );
     });
   });
 

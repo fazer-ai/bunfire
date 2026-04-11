@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import { useAuth } from "@/client/contexts/AuthContext";
@@ -21,9 +21,13 @@ export function useGoogleSignIn({
   const navigate = useNavigate();
   const { login } = useAuth();
   const [pending, setPending] = useState(false);
+  // NOTE: Synchronous lock so two rapid credential callbacks cannot both pass
+  // the guard before React commits the `pending` state update.
+  const inFlightRef = useRef(false);
 
   const signIn = async (credential: string) => {
-    if (pending) return;
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     setPending(true);
     try {
       const { data, error: apiError } = await api.api.auth.google.post({
@@ -43,6 +47,7 @@ export function useGoogleSignIn({
     } catch {
       onError(t("auth.googleSignInFailed", "Google sign-in failed"));
     } finally {
+      inFlightRef.current = false;
       setPending(false);
     }
   };

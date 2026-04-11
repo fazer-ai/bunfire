@@ -16,8 +16,9 @@ const {
   ADMIN_SIGNUP_DOMAINS,
 } = process.env;
 
-// NOTE: Strict-but-permissive domain pattern: at least one label, dot, and a 2+
-// letter TLD. Rejects "@example.com", "foo", "example.", values with slashes.
+// NOTE: Domain entries are trimmed, lowercased, and have a leading "@" stripped
+// by parseDomainList() before being matched against this pattern. Values like
+// "foo", "example.", or entries containing slashes still fail fast at startup.
 const DOMAIN_RE = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
 
 const parseDomainList = (

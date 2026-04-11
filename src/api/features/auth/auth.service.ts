@@ -53,13 +53,17 @@ export async function getUserByGoogleId(
   });
 }
 
-export async function createUser(email: string, passwordHash: string) {
+export async function createUser(
+  email: string,
+  passwordHash: string,
+): Promise<AuthUser> {
   return prisma.user.create({
     data: {
       email: email.trim().toLowerCase(),
       passwordHash,
       role: getSignupRoleForEmail(email),
     },
+    select: AUTH_USER_SELECT,
   });
 }
 
