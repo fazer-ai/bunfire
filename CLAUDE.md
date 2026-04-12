@@ -52,6 +52,17 @@ The `ADMIN_SIGNUP_DOMAINS` env var auto-promotes new accounts from listed domain
 
 Auto-promotion only fires when the email address has been verified by a trusted channel: first-time Google Sign-In with `email_verified: true`. Password signups via `POST /api/auth/signup` are always created as `USER` even if their domain matches, because there is no proof the registrant controls the address. If you need an admin from a password account, promote them manually with `bun set-admin <email>`. Only affects account creation: existing users keep their current role even if their domain is later added to the list. If `ALLOWED_SIGNUP_DOMAINS` is set, admin domains must be in the allowlist as well (otherwise registration fails before role assignment).
 
+**Threat model.** "The user controls this email address" is not the same as "the user is entitled to ADMIN in this application". Anyone who can obtain a Google ID token with `email_verified: true` for a listed domain becomes ADMIN on first sign-in. That includes:
+
+- Any Google Workspace admin of the listed domain, who can provision arbitrary `@yourdomain` addresses at will.
+- Any insider with a legitimate account in that Workspace, including ones who become malicious.
+- Anyone who compromises the Workspace admin credentials or the domain's DNS.
+- Anyone who exploits a Google provisioning bug (this category has had CVEs historically).
+
+Only enable `ADMIN_SIGNUP_DOMAINS` when the group that operates the Google Workspace is the same group that should have admin control over the application. For everything else, leave it empty and promote admins explicitly with `bun set-admin`.
+
+To narrow the takeover window for `bun set-admin`-created accounts, the Google linking flow refuses to attach a Google identity to an `ADMIN` row that has never logged in. The pre-created admin must complete a password login at least once before Google linking becomes available for that account.
+
 ## Development setup
 
 - Before configuring `DATABASE_URL` in `.env`, check for existing PostgreSQL instances by scanning ports (e.g. `ss -tlnp | grep 543` or similar). Use port 5432 as the default, but if it is already in use by another service, pick the next available port (5433, 5434, etc.) and set `POSTGRES_PORT` accordingly in `.env`

@@ -4,6 +4,7 @@ import {
   mockFindFirst,
   mockFindUnique,
   mockUpdate,
+  mockUpdateMany,
   mockUser,
   resetPrismaMocks,
   setupPrismaMock,
@@ -24,6 +25,7 @@ const {
   GoogleEmailNotVerifiedError,
   GoogleEmailDomainNotAllowedError,
   GoogleIdMismatchError,
+  GoogleAdminLinkBlockedError,
 } = await import("@/api/features/auth/google.service");
 
 describe("google.service", () => {
@@ -107,19 +109,85 @@ describe("google.service", () => {
     test("links googleId to existing user when email matches and is verified", async () => {
       mockFindUnique.mockResolvedValueOnce(null);
       mockFindFirst.mockResolvedValueOnce({ ...mockUser });
-      mockUpdate.mockResolvedValueOnce({
+      mockUpdateMany.mockResolvedValueOnce({ count: 1 });
+      mockFindUnique.mockResolvedValueOnce({
         ...mockUser,
         googleId: "google-sub-123",
       });
 
       const result = await upsertGoogleUser(baseProfile);
 
-      expect(mockUpdate).toHaveBeenCalledWith(
+      expect(mockUpdateMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: mockUser.id },
+          where: { id: mockUser.id, googleId: null },
           data: { googleId: "google-sub-123" },
         }),
       );
+      expect(result.id).toBe(mockUser.id);
+    });
+
+    test("blocks Google linking on a pre-created ADMIN that has never logged in", async () => {
+      mockFindUnique.mockResolvedValueOnce(null);
+      mockFindFirst.mockResolvedValueOnce({
+        ...mockUser,
+        role: "ADMIN",
+        lastLoginAt: null,
+      });
+
+      await expect(upsertGoogleUser(baseProfile)).rejects.toBeInstanceOf(
+        GoogleAdminLinkBlockedError,
+      );
+
+      expect(mockUpdateMany).not.toHaveBeenCalled();
+      expect(mockUpdate).not.toHaveBeenCalled();
+      expect(mockCreate).not.toHaveBeenCalled();
+    });
+
+    test("allows Google linking for ADMIN that has completed at least one login", async () => {
+      mockFindUnique.mockResolvedValueOnce(null);
+      mockFindFirst.mockResolvedValueOnce({
+        ...mockUser,
+        role: "ADMIN",
+        lastLoginAt: new Date("2026-01-01"),
+      });
+      mockUpdateMany.mockResolvedValueOnce({ count: 1 });
+      mockFindUnique.mockResolvedValueOnce({
+        ...mockUser,
+        role: "ADMIN",
+        googleId: "google-sub-123",
+      });
+
+      const result = await upsertGoogleUser(baseProfile);
+
+      expect(result.role).toBe("ADMIN");
+      expect(mockUpdateMany).toHaveBeenCalled();
+    });
+
+    test("rejects when linking races and a parallel sign-in already wrote a different googleId", async () => {
+      mockFindUnique.mockResolvedValueOnce(null);
+      mockFindFirst.mockResolvedValueOnce({ ...mockUser });
+      mockUpdateMany.mockResolvedValueOnce({ count: 0 });
+      mockFindUnique.mockResolvedValueOnce({
+        ...mockUser,
+        googleId: "different-google-sub",
+      });
+
+      await expect(upsertGoogleUser(baseProfile)).rejects.toBeInstanceOf(
+        GoogleIdMismatchError,
+      );
+    });
+
+    test("returns the existing user when linking races against an idempotent retry of the same googleId", async () => {
+      mockFindUnique.mockResolvedValueOnce(null);
+      mockFindFirst.mockResolvedValueOnce({ ...mockUser });
+      mockUpdateMany.mockResolvedValueOnce({ count: 0 });
+      mockFindUnique.mockResolvedValueOnce({
+        ...mockUser,
+        googleId: "google-sub-123",
+      });
+
+      const result = await upsertGoogleUser(baseProfile);
+
       expect(result.id).toBe(mockUser.id);
     });
 

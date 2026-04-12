@@ -30,6 +30,7 @@ export const mockFindFirst = mock(() => Promise.resolve(null as MockUser));
 export const mockFindUnique = mock(() => Promise.resolve(null as MockUser));
 export const mockCreate = mock(() => Promise.resolve(mockUser));
 export const mockUpdate = mock(() => Promise.resolve(mockUser));
+export const mockUpdateMany = mock(() => Promise.resolve({ count: 1 }));
 export const mockQueryRaw = mock(() => Promise.resolve([{ 1: 1 }]));
 
 export const prismaMock = {
@@ -38,6 +39,7 @@ export const prismaMock = {
     findUnique: mockFindUnique,
     create: mockCreate,
     update: mockUpdate,
+    updateMany: mockUpdateMany,
   },
   $queryRaw: mockQueryRaw,
 };
@@ -53,5 +55,6 @@ export function resetPrismaMocks() {
   mockFindUnique.mockReset();
   mockCreate.mockReset();
   mockUpdate.mockReset();
+  mockUpdateMany.mockReset();
   mockQueryRaw.mockReset();
 }

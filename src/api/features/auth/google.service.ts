@@ -46,9 +46,22 @@ export class GoogleIdMismatchError extends Error {
   }
 }
 
+export class GoogleAdminLinkBlockedError extends Error {
+  constructor() {
+    super("ADMIN account must complete a password login before Google linking");
+    this.name = "GoogleAdminLinkBlockedError";
+  }
+}
+
 export async function verifyGoogleIdToken(
   credential: string,
 ): Promise<GoogleProfile> {
+  // NOTE: Defense-in-depth. The /google route is conditionally registered when
+  // googleOAuthEnabled is true, but this guard removes any ambiguity if the
+  // function is reached via tests, refactors, or mutated config.
+  if (!config.googleClientId) {
+    throw new Error("Google OAuth is not configured");
+  }
   const { payload } = await jwtVerify(credential, JWKS, {
     issuer: [...GOOGLE_ISSUERS],
     audience: config.googleClientId,
@@ -92,7 +105,20 @@ export async function upsertGoogleUser(
     if (byEmail.googleId && byEmail.googleId !== profile.sub) {
       throw new GoogleIdMismatchError();
     }
-    return linkGoogleIdToUser(byEmail.id, profile.sub);
+    // NOTE: An ADMIN row that has never logged in is almost always one that an
+    // operator pre-created via `bun set-admin <email>`. Allowing first-time
+    // Google linking on such a row would let anyone holding email_verified=true
+    // for that address (e.g. a Workspace admin or insider) take over the
+    // account. Require at least one password login to prove inbox control
+    // before Google linking becomes available for ADMIN accounts.
+    if (byEmail.role === "ADMIN" && byEmail.lastLoginAt === null) {
+      throw new GoogleAdminLinkBlockedError();
+    }
+    const linked = await linkGoogleIdToUser(byEmail.id, profile.sub);
+    if (!linked) {
+      throw new GoogleIdMismatchError();
+    }
+    return linked;
   }
 
   if (!isEmailDomainAllowed(profile.email)) {

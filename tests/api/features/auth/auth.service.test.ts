@@ -56,6 +56,7 @@ describe("auth.service", () => {
           role: true,
           passwordHash: true,
           googleId: true,
+          lastLoginAt: true,
         },
       });
     });

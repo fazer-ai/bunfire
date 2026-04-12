@@ -9,6 +9,7 @@ import {
   verifyPassword,
 } from "@/api/features/auth/auth.service";
 import {
+  GoogleAdminLinkBlockedError,
   GoogleEmailDomainNotAllowedError,
   GoogleEmailNotVerifiedError,
   GoogleIdMismatchError,
@@ -176,12 +177,14 @@ const googleAuthController = baseAuthController.post(
           ),
         };
       }
-      // NOTE: GoogleEmailNotVerifiedError, GoogleIdMismatchError, and jose's
-      // JWT/JWS verification failures all map to a generic 401 so we don't
-      // leak whether an account exists or how it is linked.
+      // NOTE: GoogleEmailNotVerifiedError, GoogleIdMismatchError,
+      // GoogleAdminLinkBlockedError, and jose's JWT/JWS verification failures
+      // all map to a generic 401 so we don't leak whether an account exists,
+      // how it is linked, or that it has elevated privileges.
       if (
         error instanceof GoogleEmailNotVerifiedError ||
         error instanceof GoogleIdMismatchError ||
+        error instanceof GoogleAdminLinkBlockedError ||
         error instanceof jose.errors.JOSEError
       ) {
         logger.warn({ error }, "Google sign-in rejected");

@@ -49,6 +49,7 @@ export async function getUserByEmail(email: string) {
       ...AUTH_USER_SELECT,
       passwordHash: true,
       googleId: true,
+      lastLoginAt: true,
     },
   });
 }
@@ -92,15 +93,31 @@ export async function createGoogleUser(params: {
   });
 }
 
+// NOTE: Conditional update on `googleId: null` closes a TOCTOU race where two
+// parallel sign-ins for the same email but different Google identities both
+// observe googleId as null and the second write would silently overwrite the
+// first. The loser refetches and either fast-paths an idempotent retry of the
+// same googleId, or surfaces a mismatch.
 export async function linkGoogleIdToUser(
   userId: bigint,
   googleId: string,
-): Promise<AuthUser> {
-  return prisma.user.update({
-    where: { id: userId },
+): Promise<AuthUser | null> {
+  const result = await prisma.user.updateMany({
+    where: { id: userId, googleId: null },
     data: { googleId },
-    select: AUTH_USER_SELECT,
   });
+  if (result.count === 0) {
+    const refetched = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { ...AUTH_USER_SELECT, googleId: true },
+    });
+    if (refetched?.googleId === googleId) {
+      const { googleId: _googleId, ...rest } = refetched;
+      return rest;
+    }
+    return null;
+  }
+  return getUserByGoogleId(googleId);
 }
 
 export async function hashPassword(password: string): Promise<string> {
