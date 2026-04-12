@@ -63,6 +63,12 @@ Only enable `ADMIN_SIGNUP_DOMAINS` when the group that operates the Google Works
 
 To narrow the takeover window for `bun set-admin`-created accounts, the Google linking flow refuses to attach a Google identity to an `ADMIN` row that has never logged in. The pre-created admin must complete a password login at least once before Google linking becomes available for that account.
 
+## Routing: HashRouter (workaround)
+
+`BrowserRouter` would be preferred, but the template uses `HashRouter` in `src/client/App.tsx` because Elysia does not render Bun HTML imports from dynamic handlers: `.get("/path", () => html)` returns `{}` instead of HTML, only `.get("/path", html)` (static form) renders. A `BrowserRouter` SPA fallback needs the dynamic form, so it would swallow legitimate `/api/*` and `/assets/*` 404s. Confirmed on Elysia 1.4.10 through 1.4.28, this is not a regression waiting for a release. [elysiajs/elysia#1771](https://github.com/elysiajs/elysia/issues/1771) tracked a related static-path regression, not this.
+
+**Only during first-time template setup**, verify whether this changed: in a temp dir, install the project's Elysia version, register static + arrow + function handlers returning an HTMLBundle import, fetch each, and confirm all three return HTML with the expected marker. Issue/PR state is not a reliable gate, only the runtime smoke test is. If it passes, ask the user before migrating and ensure any SPA fallback guards `/api/*` and asset prefixes.
+
 ## Development setup
 
 - Before configuring `DATABASE_URL` in `.env`, check for existing PostgreSQL instances by scanning ports (e.g. `ss -tlnp | grep 543` or similar). Use port 5432 as the default, but if it is already in use by another service, pick the next available port (5433, 5434, etc.) and set `POSTGRES_PORT` accordingly in `.env`
