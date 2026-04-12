@@ -6,16 +6,20 @@ import { name } from "@/../package.json";
 const ROOT = process.cwd();
 const REPO_NAME = path.basename(ROOT);
 
+const SNAKE_REPO_NAME = REPO_NAME.replace(/-/g, "_");
+
+// NOTE: Order matters: longer/more specific markers must come first so they
+// match before the general project-name substitution overwrites their prefix.
 const SUBSTITUTIONS: [string, string][] = [
-  // Package name (kebab-case)
-  [name, REPO_NAME],
+  // Postgres database identifier (snake_case, must be a valid postgres identifier)
+  [`${name}_db`, `${SNAKE_REPO_NAME}_db`],
   // Environment variable prefix (SCREAMING_SNAKE_CASE)
   [
     `SERVICE_URL_${name.toUpperCase().replace(/-/g, "_")}`,
-    `SERVICE_URL_${REPO_NAME.toUpperCase().replace(/-/g, "_")}`,
+    `SERVICE_URL_${SNAKE_REPO_NAME.toUpperCase()}`,
   ],
-  // Database name / identifiers (snake_case)
-  [name.replace(/-/g, "_"), REPO_NAME.replace(/-/g, "_")],
+  // Package name and general project name
+  [name, REPO_NAME],
 ];
 
 const IGNORES = new Set([

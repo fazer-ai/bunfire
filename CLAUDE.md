@@ -1,12 +1,12 @@
 # CLAUDE.md
 
-This is a full-stack TypeScript template using **Bun + Elysia + React 19 + Tailwind CSS v4** with JWT auth, Prisma/PostgreSQL, i18n, and Biome tooling.
+**bunfire** is a full-stack TypeScript template using **Bun + Elysia + React 19 + Tailwind CSS v4** with JWT auth, Prisma/PostgreSQL, i18n, and Biome tooling.
 
 ## Applying this template to a new project
 
 1. Create a new repo from this template and clone it
 2. `bun install`
-3. `bun setup` — renames all references (`package.json`, env vars, database identifiers) from `bun-elysia-react-tailwind` to your repo's directory name
+3. `bun setup` — renames all references (`package.json`, env vars, database identifiers) from `bunfire` to your repo's directory name
 4. Update `public/index.html` — change the `<title>` to your project name
 5. Remove pages you don't need:
    - **Signup page**: delete `src/client/pages/SignupPage.tsx`, remove its route from `src/client/App.tsx`, and remove the `/api/auth/signup` endpoint in `src/api/features/auth/`

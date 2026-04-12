@@ -1,12 +1,12 @@
 {
-  "name": "bun-elysia-react-tailwind",
+  "name": "bunfire",
   "version": "0.0.0",
   "private": true,
   "module": "src/index.ts",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "https://github.com/fazer-ai/bun-elysia-react-tailwind.git"
+    "url": "https://github.com/fazer-ai/bunfire.git"
   },
   "scripts": {
     "dev": "bun --hot src/index.ts",
