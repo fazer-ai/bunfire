@@ -11,24 +11,16 @@ import { cn } from "@/client/lib/utils";
 
 type ToastType = "success" | "error" | "warning" | "info";
 
-interface ToastOptions {
-  key?: string;
-}
-
 interface Toast {
-  id: string;
-  key?: string;
+  internalId: string;
+  id?: string;
   message: string;
   type: ToastType;
   isExiting?: boolean;
 }
 
 interface ToastContextValue {
-  showToast: (
-    message: string,
-    type?: ToastType,
-    options?: ToastOptions,
-  ) => void;
+  showToast: (message: string, type?: ToastType, id?: string) => void;
 }
 
 const ToastContext = createContext<ToastContextValue | null>(null);
@@ -69,7 +61,7 @@ function ToastItem({
   onRemove,
 }: {
   toast: Toast;
-  onRemove: (id: string) => void;
+  onRemove: (internalId: string) => void;
 }) {
   return (
     <div
@@ -104,7 +96,7 @@ function ToastItem({
       <span className="flex-1 text-sm">{toast.message}</span>
       <button
         type="button"
-        onClick={() => onRemove(toast.id)}
+        onClick={() => onRemove(toast.internalId)}
         className="p-1 transition-opacity hover:opacity-70"
         aria-label="Dismiss"
       >
@@ -121,54 +113,54 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   toastsRef.current = toasts;
 
-  const removeToast = useCallback((id: string) => {
+  const removeToast = useCallback((internalId: string) => {
     setToasts((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, isExiting: true } : t)),
+      prev.map((t) =>
+        t.internalId === internalId ? { ...t, isExiting: true } : t,
+      ),
     );
     setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
+      setToasts((prev) => prev.filter((t) => t.internalId !== internalId));
     }, ANIMATION_DURATION);
 
-    const timeout = toastTimeouts.current.get(id);
+    const timeout = toastTimeouts.current.get(internalId);
     if (timeout) {
       clearTimeout(timeout);
-      toastTimeouts.current.delete(id);
+      toastTimeouts.current.delete(internalId);
     }
   }, []);
 
   const showToast = useCallback(
-    (message: string, type: ToastType = "info", options?: ToastOptions) => {
-      if (options?.key) {
-        const existingToast = toastsRef.current.find(
-          (t) => t.key === options.key,
-        );
+    (message: string, type: ToastType = "info", id?: string) => {
+      if (id) {
+        const existingToast = toastsRef.current.find((t) => t.id === id);
         if (existingToast) {
           setToasts((prev) =>
-            prev.map((t) =>
-              t.key === options.key ? { ...t, message, type } : t,
-            ),
+            prev.map((t) => (t.id === id ? { ...t, message, type } : t)),
           );
-          const existingTimeout = toastTimeouts.current.get(existingToast.id);
+          const existingTimeout = toastTimeouts.current.get(
+            existingToast.internalId,
+          );
           if (existingTimeout) {
             clearTimeout(existingTimeout);
           }
           const timeout = setTimeout(() => {
-            removeToast(existingToast.id);
+            removeToast(existingToast.internalId);
           }, 5000);
-          toastTimeouts.current.set(existingToast.id, timeout);
+          toastTimeouts.current.set(existingToast.internalId, timeout);
           return;
         }
       }
 
-      const id = crypto.randomUUID();
-      const toast: Toast = { id, message, type, key: options?.key };
+      const internalId = crypto.randomUUID();
+      const toast: Toast = { internalId, message, type, id };
 
       setToasts((prev) => [...prev, toast]);
 
       const timeout = setTimeout(() => {
-        removeToast(id);
+        removeToast(internalId);
       }, 5000);
-      toastTimeouts.current.set(id, timeout);
+      toastTimeouts.current.set(internalId, timeout);
     },
     [removeToast],
   );
@@ -178,7 +170,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       <div className="fixed right-4 bottom-4 z-50 flex flex-col gap-2">
         {toasts.map((toast) => (
-          <ToastItem key={toast.id} toast={toast} onRemove={removeToast} />
+          <ToastItem
+            key={toast.internalId}
+            toast={toast}
+            onRemove={removeToast}
+          />
         ))}
       </div>
     </ToastContext.Provider>
