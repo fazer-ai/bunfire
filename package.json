@@ -51,7 +51,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.12",
-    "@cloudflare/workers-types": "^4.20260411.1",
+    "@cloudflare/workers-types": "^4.20260415.1",
     "@happy-dom/global-registrator": "^20.9.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
