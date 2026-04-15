@@ -103,6 +103,13 @@ To narrow the takeover window for `bun set-admin`-created accounts, the Google l
 - `ProtectedRoute` wraps children in `<Layout>` — page components must NOT wrap themselves in `<Layout>`, they render content only
 - Only `ProtectedRoute` (in `src/client/components/ProtectedRoute.tsx`) should render `<Layout>` — it is the single source of the app shell (header, nav, main content area)
 
+## Frontend env vars (`BUN_PUBLIC_*`)
+
+- Env vars exposed to the client must be prefixed `BUN_PUBLIC_` and declared in `build.ts` under `define` (e.g. `"process.env.BUN_PUBLIC_CDN_URL": JSON.stringify(...)`). Without the `define` entry, the value is not inlined into the bundle
+- All reads of `process.env.BUN_PUBLIC_*` in client code must live in `src/client/lib/env.ts` and nowhere else. The rest of the client imports the typed exports from that module. Reason: in production the `define` replacement eliminates the `process` reference, but in dev the browser has no `process` global, so a bare read throws a `ReferenceError` and breaks the module. `env.ts` wraps every read in a `try/catch` and is the only place that has to deal with that
+- The `define` substitution is textual against the literal `process.env.BUN_PUBLIC_X`. Computed access (`process.env[key]`) does not get inlined, so each var must be read by its literal name in `env.ts`
+- This rule is enforced by a Biome GritQL plugin at `biome-plugins/no-bun-public-env.grit`, scoped via `overrides` in `biome.jsonc` to `src/client/**` minus `env.ts`. Violations fail `bun lint`
+
 ## Theming
 
 - All colors are CSS custom properties defined in the `@theme` block in `public/index.css` (dark mode defaults). Light mode overrides live in the `html[data-theme="light"]` block in the same file

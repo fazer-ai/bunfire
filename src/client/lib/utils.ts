@@ -24,13 +24,7 @@ export function formatDate(date: string | Date | null | undefined): string {
   return d.toLocaleDateString("en-US", { timeZone: "UTC" });
 }
 
-// NOTE: process.env.BUN_PUBLIC_CDN_URL is inlined at build time via define in build.ts.
-// In production builds, the define replacement removes the process reference entirely.
-// In dev, process may not exist in the browser — the try/catch handles that gracefully.
-let CDN_URL = "";
-try {
-  CDN_URL = (process.env.BUN_PUBLIC_CDN_URL || "").replace(/\/$/, "");
-} catch {}
+import { CDN_URL } from "@/client/lib/env";
 
 export function getAssetUrl(path: string): string {
   if (!CDN_URL) return path;

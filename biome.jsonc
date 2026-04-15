@@ -37,5 +37,11 @@
         "organizeImports": "on"
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["src/client/**/*.{ts,tsx}", "!src/client/lib/env.ts"],
+      "plugins": ["./biome-plugins/no-bun-public-env.grit"]
+    }
+  ]
 }
