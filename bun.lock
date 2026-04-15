@@ -16,7 +16,7 @@
         "elysia": "^1.4.28",
         "elysia-helmet": "^3.1.0",
         "elysia-rate-limit": "^4.5.1",
-        "i18next": "^26.0.4",
+        "i18next": "^26.0.5",
         "jose": "^6.2.2",
         "lucide-react": "^1.8.0",
         "pino": "^10.3.1",
@@ -498,7 +498,7 @@
 
     "husky": ["husky@9.1.7", "", { "bin": { "husky": "bin.js" } }, "sha512-5gs5ytaNjBrh5Ow3zrvdUUY+0VxIuWVL4i9irt6friV+BqdCfmV11CQTWMiBYWHbXhco+J1kHfTOUkePhCDvMA=="],
 
-    "i18next": ["i18next@26.0.4", "", { "dependencies": { "@babel/runtime": "^7.29.2" }, "peerDependencies": { "typescript": "^5 || ^6" }, "optionalPeers": ["typescript"] }, "sha512-gXF7U9bfioXPLv7mw8Qt2nfO7vij5MyINvPgVv99pX3fL1Y01pw2mKBFrlYpRxRCl2wz3ISenj6VsMJT2isfuA=="],
+    "i18next": ["i18next@26.0.5", "", { "dependencies": { "@babel/runtime": "^7.29.2" }, "peerDependencies": { "typescript": "^5 || ^6" }, "optionalPeers": ["typescript"] }, "sha512-9uHb4T27TdV36phJXcbpnRPt5yzAfqHXVrdASvmHZyPuZJtrLythd+GyXhiaHV5LlpuuskbAqhwPjmfTbKbi8w=="],
 
     "i18next-parser": ["i18next-parser@9.4.0", "", { "dependencies": { "@babel/runtime": "^7.25.0", "broccoli-plugin": "^4.0.7", "cheerio": "^1.0.0", "colors": "^1.4.0", "commander": "^12.1.0", "eol": "^0.9.1", "esbuild": "^0.25.0", "fs-extra": "^11.2.0", "gulp-sort": "^2.0.0", "i18next": "^23.5.1 || ^24.2.0", "js-yaml": "^4.1.0", "lilconfig": "^3.1.3", "rsvp": "^4.8.5", "sort-keys": "^5.0.0", "typescript": "^5.0.4", "vinyl": "^3.0.0", "vinyl-fs": "^4.0.0" }, "bin": { "i18next": "bin/cli.js" } }, "sha512-SLQJGDj/baBIB9ALmJVXSOXWh3Zn9+wH7J2IuQ4rvx8yuQYpUWitmt8cHFjj6FExjgr8dHfd1SGeQgkowXDO1Q=="],
 
