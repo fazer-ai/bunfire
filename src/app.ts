@@ -17,9 +17,9 @@ const HASHED_ASSET_PATTERN = /-[a-z0-9]{8,}\.[\w]+$/i;
 const app = new Elysia()
   .use(
     helmet(
-      config.env === "development"
-        ? { contentSecurityPolicy: false }
-        : { contentSecurityPolicy: { directives: cspDirectives } },
+      config.env === "production"
+        ? { contentSecurityPolicy: { directives: cspDirectives } }
+        : { contentSecurityPolicy: false },
     ),
   )
   .use(localeMiddleware)

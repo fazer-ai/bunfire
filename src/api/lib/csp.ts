@@ -1,4 +1,3 @@
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import config from "@/config";
 
@@ -18,10 +17,10 @@ export function extractInlineScriptHashes(html: string): string[] {
   return hashes;
 }
 
-function loadDistInlineScriptHashes(): string[] {
+async function loadDistInlineScriptHashes(): Promise<string[]> {
   if (config.env !== "production") return [];
   try {
-    return extractInlineScriptHashes(readFileSync(DIST_HTML, "utf8"));
+    return extractInlineScriptHashes(await Bun.file(DIST_HTML).text());
   } catch (err) {
     throw new Error(
       `CSP: could not read ${DIST_HTML} to compute inline script hashes (${
@@ -32,15 +31,21 @@ function loadDistInlineScriptHashes(): string[] {
 }
 
 function getCdnOrigin(): string | null {
+  if (!config.cdnUrl) return null;
   try {
     const origin = new URL(config.cdnUrl).origin;
     return origin === config.publicUrl ? null : origin;
   } catch {
+    if (config.env === "production") {
+      throw new Error(
+        `CSP: invalid CDN_URL "${config.cdnUrl}". Expected an absolute URL so CSP can allow the CDN origin.`,
+      );
+    }
     return null;
   }
 }
 
-const inlineScriptHashes = loadDistInlineScriptHashes();
+const inlineScriptHashes = await loadDistInlineScriptHashes();
 const cdnOrigin = getCdnOrigin();
 
 export const cspDirectives: Record<string, string[]> = {
@@ -49,8 +54,8 @@ export const cspDirectives: Record<string, string[]> = {
     ...inlineScriptHashes,
     ...(cdnOrigin ? [cdnOrigin] : []),
   ],
-  styleSrc: ["'self'", "'unsafe-inline'"],
+  styleSrc: ["'self'", "'unsafe-inline'", ...(cdnOrigin ? [cdnOrigin] : [])],
   imgSrc: ["'self'", "data:", ...(cdnOrigin ? [cdnOrigin] : [])],
-  fontSrc: ["'self'", "data:"],
+  fontSrc: ["'self'", "data:", ...(cdnOrigin ? [cdnOrigin] : [])],
   connectSrc: ["'self'", ...(cdnOrigin ? [cdnOrigin] : [])],
 };
