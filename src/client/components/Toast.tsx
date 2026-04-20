@@ -1,22 +1,25 @@
+import * as ToastPrimitive from "@radix-ui/react-toast";
 import { AlertCircle, CheckCircle, Info, X, XCircle } from "lucide-react";
 import {
   createContext,
   type ReactNode,
   useCallback,
   useContext,
+  useEffect,
   useRef,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/client/lib/utils";
 
 type ToastType = "success" | "error" | "warning" | "info";
 
-interface Toast {
+interface ToastItem {
   internalId: string;
   id?: string;
   message: string;
   type: ToastType;
-  isExiting?: boolean;
+  open: boolean;
 }
 
 interface ToastContextValue {
@@ -33,18 +36,20 @@ export function useToast() {
   return context;
 }
 
+const TOAST_DURATION = 5000;
+
 const icons: Record<ToastType, ReactNode> = {
-  success: <CheckCircle className="h-5 w-5" />,
-  error: <XCircle className="h-5 w-5" />,
-  warning: <AlertCircle className="h-5 w-5" />,
-  info: <Info className="h-5 w-5" />,
+  success: <CheckCircle className="h-5 w-5" aria-hidden="true" />,
+  error: <XCircle className="h-5 w-5" aria-hidden="true" />,
+  warning: <AlertCircle className="h-5 w-5" aria-hidden="true" />,
+  info: <Info className="h-5 w-5" aria-hidden="true" />,
 };
 
 const styles: Record<ToastType, string> = {
-  success: "bg-bg-tertiary/90 text-text-primary border-success",
-  error: "bg-bg-tertiary/90 text-text-primary border-error",
-  warning: "bg-bg-tertiary/90 text-text-primary border-warning",
-  info: "bg-bg-tertiary/90 text-text-primary border-accent",
+  success: "border-success",
+  error: "border-error",
+  warning: "border-warning",
+  info: "border-accent",
 };
 
 const iconStyles: Record<ToastType, string> = {
@@ -54,129 +59,126 @@ const iconStyles: Record<ToastType, string> = {
   info: "text-accent",
 };
 
-const ANIMATION_DURATION = 300;
+function generateInternalId(): string {
+  // NOTE: randomUUID requires secure context (HTTPS / localhost). Fall back to Math.random for plain HTTP.
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
+    return crypto.randomUUID();
+  }
+  return Math.random().toString(36).slice(2);
+}
 
-function ToastItem({
+function ToastItemView({
   toast,
-  onRemove,
+  onOpenChange,
 }: {
-  toast: Toast;
-  onRemove: (internalId: string) => void;
+  toast: ToastItem;
+  onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
+  const assertive = toast.type === "error" || toast.type === "warning";
+
   return (
-    <div
+    <ToastPrimitive.Root
+      open={toast.open}
+      onOpenChange={onOpenChange}
+      type={assertive ? "foreground" : "background"}
       className={cn(
-        "flex items-center gap-3 rounded-lg border px-4 py-3 shadow-lg",
+        "flex items-center gap-3 rounded-lg border bg-bg-tertiary/95 px-4 py-3 shadow-lg backdrop-blur-sm",
+        "data-[state=open]:slide-in-from-right-full data-[state=open]:animate-in",
+        "data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-right-full data-[state=closed]:animate-out",
+        "data-[swipe=end]:slide-out-to-right-full data-[swipe=cancel]:translate-x-0 data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=end]:animate-out data-[swipe=cancel]:transition-transform",
         styles[toast.type],
       )}
-      style={{
-        transition: `transform ${ANIMATION_DURATION}ms ease-out, opacity ${ANIMATION_DURATION}ms ease-out`,
-        transform: toast.isExiting ? "translateX(120%)" : "translateX(0)",
-        opacity: toast.isExiting ? 0 : 1,
-        animation: toast.isExiting
-          ? undefined
-          : `slideInFromRight ${ANIMATION_DURATION}ms ease-out`,
-      }}
     >
-      <style>
-        {`
-          @keyframes slideInFromRight {
-            from {
-              transform: translateX(120%);
-              opacity: 0;
-            }
-            to {
-              transform: translateX(0);
-              opacity: 1;
-            }
-          }
-        `}
-      </style>
       <span className={iconStyles[toast.type]}>{icons[toast.type]}</span>
-      <span className="flex-1 text-sm">{toast.message}</span>
-      <button
-        type="button"
-        onClick={() => onRemove(toast.internalId)}
-        className="p-1 transition-opacity hover:opacity-70"
-        aria-label="Dismiss"
+      <ToastPrimitive.Title className="flex-1 text-sm text-text-primary">
+        {toast.message}
+      </ToastPrimitive.Title>
+      <ToastPrimitive.Close
+        // t('common.dismiss', 'Dismiss')
+        aria-label={t("common.dismiss", "Dismiss")}
+        className="rounded-md p-1 text-text-muted transition-colors hover:bg-bg-hover hover:text-text-primary"
       >
-        <X className="h-4 w-4" />
-      </button>
-    </div>
+        <X className="h-4 w-4" aria-hidden="true" />
+      </ToastPrimitive.Close>
+    </ToastPrimitive.Root>
   );
 }
 
 export function ToastProvider({ children }: { children: ReactNode }) {
-  const [toasts, setToasts] = useState<Toast[]>([]);
-  const toastTimeouts = useRef<Map<string, NodeJS.Timeout>>(new Map());
-  const toastsRef = useRef<Toast[]>([]);
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const toastsRef = useRef<ToastItem[]>([]);
+  const pendingTimeoutsRef = useRef<Set<number>>(new Set());
 
-  toastsRef.current = toasts;
+  useEffect(() => {
+    toastsRef.current = toasts;
+  }, [toasts]);
 
-  const removeToast = useCallback((internalId: string) => {
+  useEffect(() => {
+    const timeouts = pendingTimeoutsRef.current;
+    return () => {
+      for (const id of timeouts) {
+        window.clearTimeout(id);
+      }
+      timeouts.clear();
+    };
+  }, []);
+
+  const handleOpenChange = useCallback((internalId: string, open: boolean) => {
+    if (open) return;
     setToasts((prev) =>
       prev.map((t) =>
-        t.internalId === internalId ? { ...t, isExiting: true } : t,
+        t.internalId === internalId ? { ...t, open: false } : t,
       ),
     );
-    setTimeout(() => {
+    const timeoutId = window.setTimeout(() => {
+      pendingTimeoutsRef.current.delete(timeoutId);
       setToasts((prev) => prev.filter((t) => t.internalId !== internalId));
-    }, ANIMATION_DURATION);
-
-    const timeout = toastTimeouts.current.get(internalId);
-    if (timeout) {
-      clearTimeout(timeout);
-      toastTimeouts.current.delete(internalId);
-    }
+    }, 200);
+    pendingTimeoutsRef.current.add(timeoutId);
   }, []);
 
   const showToast = useCallback(
     (message: string, type: ToastType = "info", id?: string) => {
       if (id) {
-        const existingToast = toastsRef.current.find((t) => t.id === id);
-        if (existingToast) {
+        const existing = toastsRef.current.find((t) => t.id === id && t.open);
+        if (existing) {
           setToasts((prev) =>
-            prev.map((t) => (t.id === id ? { ...t, message, type } : t)),
+            prev.map((t) =>
+              t.internalId === existing.internalId
+                ? { ...t, message, type }
+                : t,
+            ),
           );
-          const existingTimeout = toastTimeouts.current.get(
-            existingToast.internalId,
-          );
-          if (existingTimeout) {
-            clearTimeout(existingTimeout);
-          }
-          const timeout = setTimeout(() => {
-            removeToast(existingToast.internalId);
-          }, 5000);
-          toastTimeouts.current.set(existingToast.internalId, timeout);
           return;
         }
       }
 
-      const internalId = crypto.randomUUID();
-      const toast: Toast = { internalId, message, type, id };
-
-      setToasts((prev) => [...prev, toast]);
-
-      const timeout = setTimeout(() => {
-        removeToast(internalId);
-      }, 5000);
-      toastTimeouts.current.set(internalId, timeout);
+      const internalId = generateInternalId();
+      setToasts((prev) => [
+        ...prev,
+        { internalId, id, message, type, open: true },
+      ]);
     },
-    [removeToast],
+    [],
   );
 
   return (
     <ToastContext.Provider value={{ showToast }}>
-      {children}
-      <div className="fixed right-4 bottom-4 z-50 flex flex-col gap-2">
+      <ToastPrimitive.Provider duration={TOAST_DURATION} swipeDirection="right">
+        {children}
         {toasts.map((toast) => (
-          <ToastItem
+          <ToastItemView
             key={toast.internalId}
             toast={toast}
-            onRemove={removeToast}
+            onOpenChange={(open) => handleOpenChange(toast.internalId, open)}
           />
         ))}
-      </div>
+        <ToastPrimitive.Viewport className="fixed right-0 bottom-0 z-(--z-toast) flex w-full max-w-sm flex-col gap-2 p-4 outline-none" />
+      </ToastPrimitive.Provider>
     </ToastContext.Provider>
   );
 }

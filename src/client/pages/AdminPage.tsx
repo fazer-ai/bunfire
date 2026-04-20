@@ -1,12 +1,13 @@
 import { Loader2, Search, Shield, ShieldOff, Users } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Badge, Button, Card } from "@/client/components";
-import { useToast } from "@/client/components/Toast";
+import { Badge, Button, Card, useToast } from "@/client/components";
 import { useAuth } from "@/client/contexts/AuthContext";
 import { api } from "@/client/lib/api";
 import { cn, formatDate } from "@/client/lib/utils";
 
+// NOTE: date fields are typed as Date by Eden Treaty but arrive as ISO strings at runtime;
+// formatDate handles both, so we keep the Date type for Eden compatibility.
 interface AdminUser {
   id: string;
   email: string;
@@ -21,6 +22,11 @@ interface AdminStats {
   adminCount: number;
 }
 
+// t('admin.noUsers', 'No users found')
+// t('admin.demoteTooltip', 'Demote to User')
+// t('admin.promoteTooltip', 'Promote to Admin')
+const SEARCH_DEBOUNCE_MS = 300;
+
 export function AdminPage() {
   const { t } = useTranslation();
   const { showToast } = useToast();
@@ -31,6 +37,7 @@ export function AdminPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchStats = useCallback(async () => {
     const { data } = await api.api.admin.stats.get();
@@ -49,7 +56,7 @@ export function AdminPage() {
         },
       });
       if (data) {
-        setUsers(data.users as AdminUser[]);
+        setUsers(data.users);
         setTotalPages(data.totalPages);
         setPage(data.page);
       }
@@ -63,7 +70,22 @@ export function AdminPage() {
     fetchUsers();
   }, [fetchStats, fetchUsers]);
 
-  const handleSearch = () => {
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetchUsers(1, value);
+    }, SEARCH_DEBOUNCE_MS);
+  };
+
+  const handleSearchSubmit = () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     fetchUsers(1, search);
   };
 
@@ -106,7 +128,7 @@ export function AdminPage() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Card className="flex items-center gap-4">
             <div className="rounded-lg bg-bg-tertiary p-3">
-              <Users className="h-6 w-6 text-accent" />
+              <Users className="h-6 w-6 text-accent" aria-hidden="true" />
             </div>
             <div>
               <p className="font-bold text-2xl text-text-primary">
@@ -119,7 +141,7 @@ export function AdminPage() {
           </Card>
           <Card className="flex items-center gap-4">
             <div className="rounded-lg bg-bg-tertiary p-3">
-              <Shield className="h-6 w-6 text-purple" />
+              <Shield className="h-6 w-6 text-purple" aria-hidden="true" />
             </div>
             <div>
               <p className="font-bold text-2xl text-text-primary">
@@ -136,24 +158,31 @@ export function AdminPage() {
       <Card>
         <div className="mb-4 flex items-center gap-3">
           <div className="relative flex-1">
-            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-text-muted" />
+            <Search
+              className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-text-muted"
+              aria-hidden="true"
+            />
             <input
               type="text"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearchSubmit()}
               placeholder={t("admin.searchUsers", "Search users by email...")}
+              aria-label={t("admin.searchUsers", "Search users by email...")}
               className="w-full rounded-lg border border-border bg-bg-tertiary py-2 pr-4 pl-10 text-text-primary placeholder-text-placeholder focus:border-border-focus focus:outline-none"
             />
           </div>
-          <Button size="sm" onClick={handleSearch}>
+          <Button size="sm" onClick={handleSearchSubmit} disabled={loading}>
             {t("common.search", "Search")}
           </Button>
         </div>
 
         {loading ? (
           <div className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-text-secondary" />
+            <Loader2
+              className="h-8 w-8 animate-spin text-text-secondary"
+              aria-hidden="true"
+            />
           </div>
         ) : (
           <>
@@ -182,78 +211,87 @@ export function AdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((user) => (
-                    <tr
-                      key={user.id}
-                      className="border-border/50 border-b hover:bg-bg-tertiary/50"
-                    >
-                      <td className="px-2 py-3 text-text-primary">
-                        {user.email}
-                      </td>
-                      <td className="px-2 py-3 text-text-secondary">
-                        {user.name || "-"}
-                      </td>
-                      <td className="px-2 py-3">
-                        <Badge
-                          variant={
-                            user.role === "ADMIN" ? "warning" : "secondary"
-                          }
-                        >
-                          {user.role}
-                        </Badge>
-                      </td>
-                      <td className="px-2 py-3 text-text-secondary">
-                        {formatDate(user.createdAt)}
-                      </td>
-                      <td className="px-2 py-3 text-text-secondary">
-                        {formatDate(user.lastLoginAt)}
-                      </td>
-                      <td className="px-2 py-3">
-                        <button
-                          type="button"
-                          onClick={() => handleToggleRole(user)}
-                          disabled={
-                            user.id === currentUser?.id && user.role === "ADMIN"
-                          }
-                          className={cn(
-                            "inline-flex items-center gap-1 rounded border border-border px-2 py-1 font-medium text-xs transition-colors",
-                            {
-                              "bg-bg-tertiary text-text-secondary hover:bg-bg-hover hover:text-text-primary":
-                                !(
-                                  user.id === currentUser?.id &&
-                                  user.role === "ADMIN"
-                                ),
-                              "cursor-not-allowed bg-bg-tertiary text-text-muted opacity-50":
-                                user.id === currentUser?.id &&
-                                user.role === "ADMIN",
-                            },
-                          )}
-                          title={
-                            user.id === currentUser?.id && user.role === "ADMIN"
-                              ? t(
-                                  "admin.cannotDemoteSelf",
-                                  "Cannot demote yourself",
-                                )
-                              : user.role === "ADMIN"
-                                ? t("admin.demote", "Demote to User")
-                                : t("admin.promote", "Promote to Admin")
-                          }
-                        >
-                          {user.role === "ADMIN" ? (
-                            <>
-                              <ShieldOff className="h-3 w-3" />
-                              {t("admin.demote", "Demote")}
-                            </>
-                          ) : (
-                            <>
-                              <Shield className="h-3 w-3" />
-                              {t("admin.promote", "Promote")}
-                            </>
-                          )}
-                        </button>
+                  {users.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        className="px-2 py-10 text-center text-sm text-text-muted"
+                      >
+                        {t("admin.noUsers", "No users found")}
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    users.map((user) => {
+                      const disabled =
+                        user.id === currentUser?.id && user.role === "ADMIN";
+                      const isAdmin = user.role === "ADMIN";
+                      const tooltip = disabled
+                        ? t("admin.cannotDemoteSelf", "Cannot demote yourself")
+                        : isAdmin
+                          ? t("admin.demoteTooltip", "Demote to User")
+                          : t("admin.promoteTooltip", "Promote to Admin");
+                      return (
+                        <tr
+                          key={user.id}
+                          className="border-border/50 border-b hover:bg-bg-tertiary/50"
+                        >
+                          <td className="px-2 py-3 text-text-primary">
+                            {user.email}
+                          </td>
+                          <td className="px-2 py-3 text-text-secondary">
+                            {user.name || "-"}
+                          </td>
+                          <td className="px-2 py-3">
+                            <Badge variant={isAdmin ? "warning" : "secondary"}>
+                              {user.role}
+                            </Badge>
+                          </td>
+                          <td className="px-2 py-3 text-text-secondary">
+                            {formatDate(user.createdAt)}
+                          </td>
+                          <td className="px-2 py-3 text-text-secondary">
+                            {formatDate(user.lastLoginAt)}
+                          </td>
+                          <td className="px-2 py-3">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleRole(user)}
+                              disabled={disabled}
+                              className={cn(
+                                "inline-flex items-center gap-1 rounded border border-border px-2 py-1 font-medium text-xs transition-colors",
+                                {
+                                  "bg-bg-tertiary text-text-secondary hover:bg-bg-hover hover:text-text-primary":
+                                    !disabled,
+                                  "cursor-not-allowed bg-bg-tertiary text-text-muted opacity-50":
+                                    disabled,
+                                },
+                              )}
+                              title={tooltip}
+                              aria-label={tooltip}
+                            >
+                              {isAdmin ? (
+                                <>
+                                  <ShieldOff
+                                    className="h-3 w-3"
+                                    aria-hidden="true"
+                                  />
+                                  {t("admin.demote", "Demote")}
+                                </>
+                              ) : (
+                                <>
+                                  <Shield
+                                    className="h-3 w-3"
+                                    aria-hidden="true"
+                                  />
+                                  {t("admin.promote", "Promote")}
+                                </>
+                              )}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>

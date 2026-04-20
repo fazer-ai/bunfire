@@ -1,61 +1,56 @@
-import { type ReactNode, useCallback, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import * as TooltipPrimitive from "@radix-ui/react-tooltip";
+import type { ReactNode } from "react";
 
 interface TooltipProps {
   content: string;
   children?: ReactNode;
+  side?: "top" | "right" | "bottom" | "left";
+  align?: "start" | "center" | "end";
+  sideOffset?: number;
+  asChild?: boolean;
 }
 
-export function Tooltip({ content, children }: TooltipProps) {
-  const [visible, setVisible] = useState(false);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
-  const triggerRef = useRef<HTMLSpanElement>(null);
-
-  const show = useCallback(() => {
-    if (triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      setPosition({
-        top: rect.top,
-        left: rect.left + rect.width / 2,
-      });
-    }
-    setVisible(true);
-  }, []);
-
-  const hide = useCallback(() => setVisible(false), []);
+// NOTE: when asChild=true (default), Radix Slot clones `children` and merges
+// props — including `className`. If the cloned child receives a function
+// className (e.g. `<NavLink className={({ isActive }) => ...}>`), Slot
+// stringifies it during the merge and the serialized function ends up in the
+// rendered `class` attribute. If you hit that, wrap the child in a plain
+// `<span>` so Slot clones the span instead; the inner component keeps its own
+// className semantics. See Sidebar.tsx.
+export function Tooltip({
+  content,
+  children,
+  side = "top",
+  align = "center",
+  sideOffset = 6,
+  asChild = true,
+}: TooltipProps) {
+  const trigger = children ?? (
+    <button
+      type="button"
+      className="inline-flex h-4 w-4 cursor-help items-center justify-center rounded-full border border-border bg-transparent p-0 font-medium text-[10px] text-text-muted"
+      aria-label={content}
+    >
+      ?
+    </button>
+  );
 
   return (
-    <>
-      {/* biome-ignore lint/a11y/noStaticElementInteractions: Tooltip wrapper delegates focus to interactive children */}
-      <span
-        ref={triggerRef}
-        className="relative inline-flex"
-        onMouseEnter={show}
-        onMouseLeave={hide}
-        onFocus={show}
-        onBlur={hide}
-      >
-        {children ?? (
-          <span
-            className="inline-flex h-4 w-4 cursor-help items-center justify-center rounded-full border border-border font-medium text-[10px] text-text-muted"
-            role="img"
-            aria-label={content}
-          >
-            ?
-          </span>
-        )}
-      </span>
-      {visible &&
-        createPortal(
-          <span
-            role="tooltip"
-            className="pointer-events-none fixed z-100 -mt-1.5 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md border border-border bg-bg-primary px-2.5 py-1.5 text-text-primary text-xs"
-            style={{ top: position.top, left: position.left }}
-          >
-            {content}
-          </span>,
-          document.body,
-        )}
-    </>
+    <TooltipPrimitive.Root>
+      <TooltipPrimitive.Trigger asChild={asChild || !children}>
+        {trigger}
+      </TooltipPrimitive.Trigger>
+      <TooltipPrimitive.Portal>
+        <TooltipPrimitive.Content
+          side={side}
+          align={align}
+          sideOffset={sideOffset}
+          collisionPadding={8}
+          className="data-[state=closed]:fade-out-0 data-[state=delayed-open]:fade-in-0 z-(--z-tooltip) whitespace-nowrap rounded-md border border-border bg-bg-primary px-2.5 py-1.5 text-text-primary text-xs shadow-lg data-[state=closed]:animate-out data-[state=delayed-open]:animate-in"
+        >
+          {content}
+        </TooltipPrimitive.Content>
+      </TooltipPrimitive.Portal>
+    </TooltipPrimitive.Root>
   );
 }

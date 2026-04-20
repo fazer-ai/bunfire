@@ -5,16 +5,20 @@
     "cannotDemoteSelf": "Cannot demote yourself",
     "createdAt": "Created",
     "demote": "Demote",
+    "demoteTooltip": "Demote to User",
     "email": "Email",
     "lastLogin": "Last Login",
     "name": "Name",
+    "noUsers": "No users found",
     "promote": "Promote",
+    "promoteTooltip": "Promote to Admin",
     "role": "Role",
     "roleUpdated": "Role updated to {{role}}",
     "roleUpdateFailed": "Failed to update role",
     "searchUsers": "Search users by email...",
     "title": "Admin Panel",
-    "totalUsers": "Total Users"
+    "totalUsers": "Total Users",
+    "users": "Users"
   },
   "auth": {
     "confirmPassword": "Confirm Password",
@@ -38,24 +42,91 @@
     "signupFailed": "Signup failed"
   },
   "common": {
+    "close": "Close",
+    "dismiss": "Dismiss",
+    "email": "Email",
     "hidePassword": "Hide password",
+    "logoAlt": "Logo",
+    "name": "Name",
     "next": "Next",
+    "notAvailable": "N/A",
     "pageOf": "{{page}} of {{total}}",
     "previous": "Previous",
+    "role": "Role",
     "search": "Search",
     "showPassword": "Show password"
   },
   "home": {
+    "playground": {
+      "modal": {
+        "body": "This modal uses Radix Dialog: focus is trapped, Esc closes, clicking outside closes, and focus returns to the trigger when closed.",
+        "cancel": "Cancel",
+        "confirm": "Confirm",
+        "confirmed": "Modal confirmed",
+        "description": "Radix Dialog with focus trap and focus return to the trigger.",
+        "label": "Modal",
+        "title": "Example modal",
+        "trigger": "Open modal"
+      },
+      "subtitle": "Examples to exercise Modal, Toast and Tooltip",
+      "title": "UI playground",
+      "toast": {
+        "description": "Four severities, swipe to dismiss.",
+        "error": "Error",
+        "errorMessage": "Something broke",
+        "info": "Info",
+        "infoMessage": "This is informative",
+        "label": "Toast",
+        "success": "Success",
+        "successMessage": "Saved successfully",
+        "warning": "Warning",
+        "warningMessage": "Careful with this"
+      },
+      "tooltip": {
+        "content": "Remove this block before using the template in production.",
+        "description": "Hover the marker to reveal guidance.",
+        "label": "Tooltip"
+      }
+    },
     "role": "Role: {{role}}",
     "welcome": "Welcome, {{email}}!"
   },
+  "language": {
+    "label": "Language"
+  },
   "nav": {
     "admin": "Admin",
-    "home": "Home"
+    "breadcrumbs": "Breadcrumbs",
+    "closeMenu": "Close menu",
+    "collapse": "Collapse",
+    "collapsed": "Collapsed",
+    "expand": "Expand",
+    "home": "Home",
+    "mainNavigation": "Main navigation",
+    "openMenu": "Open menu",
+    "resizeSidebar": "Resize sidebar",
+    "settings": "Settings",
+    "skipToContent": "Skip to content"
+  },
+  "settings": {
+    "about": "About",
+    "aboutHint": "Details about this template.",
+    "aboutLinks": "Links",
+    "aboutName": "Name",
+    "aboutVersion": "Version",
+    "appearance": "Appearance",
+    "languageHint": "Applies instantly across the app.",
+    "profile": "Profile",
+    "profileHint": "This information comes from your account. Editing is not wired up in the template.",
+    "sections": "Settings sections",
+    "subtitle": "Manage your account and preferences",
+    "themeHint": "Choose light, dark, or follow your system.",
+    "title": "Settings"
   },
   "theme": {
     "auto": "Auto",
     "dark": "Dark",
+    "label": "Theme",
     "light": "Light"
   }
 }

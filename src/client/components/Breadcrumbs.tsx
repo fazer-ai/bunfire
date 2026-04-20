@@ -1,0 +1,54 @@
+import { ChevronRight } from "lucide-react";
+import { Fragment } from "react";
+import { useTranslation } from "react-i18next";
+import { Link, useLocation } from "react-router";
+import { buildBreadcrumbs } from "@/client/lib/breadcrumbs";
+
+export function Breadcrumbs() {
+  const { t } = useTranslation();
+  const location = useLocation();
+  const crumbs = buildBreadcrumbs(location.pathname);
+
+  if (crumbs.length === 0) return null;
+
+  return (
+    <nav
+      aria-label={t("nav.breadcrumbs", "Breadcrumbs")}
+      className="hidden min-w-0 items-center md:flex"
+    >
+      <ol className="flex items-center gap-1 text-sm">
+        {crumbs.map((crumb, index) => {
+          const label = t(crumb.labelKey, crumb.defaultLabel);
+          const isLast = index === crumbs.length - 1;
+          return (
+            <Fragment key={crumb.to ?? `current:${crumb.labelKey}`}>
+              {index > 0 && (
+                <ChevronRight
+                  className="h-3.5 w-3.5 shrink-0 text-text-muted"
+                  aria-hidden="true"
+                />
+              )}
+              <li className="flex min-w-0 items-center">
+                {crumb.to && !isLast ? (
+                  <Link
+                    to={crumb.to}
+                    className="truncate rounded px-1.5 py-0.5 text-text-secondary transition-colors hover:bg-bg-tertiary hover:text-text-primary"
+                  >
+                    {label}
+                  </Link>
+                ) : (
+                  <span
+                    aria-current={isLast ? "page" : undefined}
+                    className="truncate px-1.5 py-0.5 font-medium text-text-primary"
+                  >
+                    {label}
+                  </span>
+                )}
+              </li>
+            </Fragment>
+          );
+        })}
+      </ol>
+    </nav>
+  );
+}

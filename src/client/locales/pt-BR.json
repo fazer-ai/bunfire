@@ -5,16 +5,20 @@
     "cannotDemoteSelf": "Não é possível rebaixar a si mesmo",
     "createdAt": "Criado em",
     "demote": "Rebaixar",
+    "demoteTooltip": "Rebaixar para Usuário",
     "email": "Email",
     "lastLogin": "Último Login",
     "name": "Nome",
+    "noUsers": "Nenhum usuário encontrado",
     "promote": "Promover",
+    "promoteTooltip": "Promover a Admin",
     "role": "Função",
     "roleUpdated": "Função atualizada para {{role}}",
     "roleUpdateFailed": "Falha ao atualizar função",
     "searchUsers": "Buscar usuários por email...",
     "title": "Painel Administrativo",
-    "totalUsers": "Total de Usuários"
+    "totalUsers": "Total de Usuários",
+    "users": "Usuários"
   },
   "auth": {
     "confirmPassword": "Confirmar Senha",
@@ -38,24 +42,91 @@
     "signupFailed": "Falha ao cadastrar"
   },
   "common": {
+    "close": "Fechar",
+    "dismiss": "Dispensar",
+    "email": "Email",
     "hidePassword": "Esconder senha",
+    "logoAlt": "Logo",
+    "name": "Nome",
     "next": "Próximo",
+    "notAvailable": "N/A",
     "pageOf": "{{page}} de {{total}}",
     "previous": "Anterior",
+    "role": "Função",
     "search": "Buscar",
     "showPassword": "Mostrar senha"
   },
   "home": {
+    "playground": {
+      "modal": {
+        "body": "Este modal usa Radix Dialog: foco preso, Esc fecha, clique fora fecha, e retorna o foco ao gatilho quando fechado.",
+        "cancel": "Cancelar",
+        "confirm": "Confirmar",
+        "confirmed": "Modal confirmado",
+        "description": "Dialog do Radix com foco preso e retorno de foco ao gatilho.",
+        "label": "Modal",
+        "title": "Modal de exemplo",
+        "trigger": "Abrir modal"
+      },
+      "subtitle": "Exemplos para exercitar Modal, Toast e Tooltip",
+      "title": "Playground de UI",
+      "toast": {
+        "description": "Quatro severidades, com swipe para descartar.",
+        "error": "Erro",
+        "errorMessage": "Algo quebrou",
+        "info": "Info",
+        "infoMessage": "Isso é informativo",
+        "label": "Toast",
+        "success": "Sucesso",
+        "successMessage": "Salvo com sucesso",
+        "warning": "Aviso",
+        "warningMessage": "Cuidado com isso"
+      },
+      "tooltip": {
+        "content": "Remova este bloco antes de usar o template em produção.",
+        "description": "Passe o mouse no marcador para revelar a dica.",
+        "label": "Tooltip"
+      }
+    },
     "role": "Função: {{role}}",
     "welcome": "Bem-vindo, {{email}}!"
   },
+  "language": {
+    "label": "Idioma"
+  },
   "nav": {
     "admin": "Admin",
-    "home": "Início"
+    "breadcrumbs": "Navegação contextual",
+    "closeMenu": "Fechar menu",
+    "collapse": "Recolher",
+    "collapsed": "Recolhido",
+    "expand": "Expandir",
+    "home": "Início",
+    "mainNavigation": "Navegação principal",
+    "openMenu": "Abrir menu",
+    "resizeSidebar": "Redimensionar menu lateral",
+    "settings": "Configurações",
+    "skipToContent": "Pular para o conteúdo"
+  },
+  "settings": {
+    "about": "Sobre",
+    "aboutHint": "Detalhes sobre este template.",
+    "aboutLinks": "Links",
+    "aboutName": "Nome",
+    "aboutVersion": "Versão",
+    "appearance": "Aparência",
+    "languageHint": "Aplicado instantaneamente em todo o app.",
+    "profile": "Perfil",
+    "profileHint": "Estas informações vêm da sua conta. A edição não está ligada neste template.",
+    "sections": "Seções de configurações",
+    "subtitle": "Gerencie sua conta e preferências",
+    "themeHint": "Escolha claro, escuro ou seguir o sistema.",
+    "title": "Configurações"
   },
   "theme": {
     "auto": "Auto",
     "dark": "Escuro",
+    "label": "Tema",
     "light": "Claro"
   }
 }

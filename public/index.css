@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 @theme {
   /* Typography */
@@ -54,6 +55,20 @@
   --color-badge-success: #1e3a2f;
   --color-badge-warning: #3d3520;
   --color-badge-info: #1e3044;
+
+  /* Z-index scale (stacking order, from lowest to highest). Use via Tailwind
+     arbitrary values: z-[var(--z-modal)] or style={{ zIndex: "var(--z-modal)" }}.
+     Rule of thumb: overlays sit just below the content they obscure. */
+  --z-sidebar: 10;
+  --z-sidebar-toggle: 20;
+  --z-drawer-overlay: 40;
+  --z-drawer: 50;
+  --z-dropdown: 60;
+  --z-modal-overlay: 70;
+  --z-modal: 80;
+  --z-toast: 90;
+  --z-tooltip: 100;
+  --z-skip-link: 110;
 }
 
 @font-face {
@@ -160,33 +175,43 @@ html[data-theme="light"] {
   scrollbar-color: var(--color-border-hover) var(--color-bg-secondary);
 }
 
-/* Animations */
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+/* Sidebar nav: hide the scrollbar so it never eats width from icon-only items
+   in collapsed mode or crops labels in expanded mode. Scrolling still works. */
+.sidebar-nav {
+  scrollbar-width: none;
 }
 
-@keyframes slide-in-up {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.sidebar-nav::-webkit-scrollbar {
+  display: none;
 }
 
-.animate-fade-in {
-  animation: fade-in 0.3s ease-out;
+/* Sidebar resize drag: locks the cursor and prevents text selection across the
+   whole document while the user drags, even if the pointer leaves the handle. */
+body[data-resizing-sidebar] {
+  cursor: col-resize;
+  user-select: none;
 }
 
-.animate-slide-in-up {
-  animation: slide-in-up 0.3s ease-out;
+body[data-resizing-sidebar] * {
+  cursor: col-resize !important;
+}
+
+/* While dragging the resizer, the sidebar width is driven by rAF; a CSS
+   transition on width would fight the drag and feel laggy. */
+body[data-resizing-sidebar] aside {
+  transition: none !important;
+}
+
+/* Respect OS-level reduced-motion preference. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Logo glow effect */

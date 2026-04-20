@@ -1,0 +1,127 @@
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+
+export const SIDEBAR_MIN_WIDTH = 200;
+export const SIDEBAR_MAX_WIDTH = 400;
+export const SIDEBAR_DEFAULT_WIDTH = 256;
+export const SIDEBAR_COLLAPSED_WIDTH = 64;
+// NOTE: Drags below MIN_WIDTH snap to collapsed; drags at or above MIN_WIDTH
+// expand to the pointer position (clamped). Keeping the snap equal to
+// MIN_WIDTH avoids a dead range (150..200) that would otherwise be stored and
+// then clamped up on reload.
+export const SIDEBAR_COLLAPSE_SNAP = SIDEBAR_MIN_WIDTH;
+
+const COLLAPSED_STORAGE_KEY = "@app:sidebar-collapsed";
+const WIDTH_STORAGE_KEY = "@app:sidebar-width";
+
+interface SidebarContextType {
+  collapsed: boolean;
+  setCollapsed: (collapsed: boolean) => void;
+  toggleCollapsed: () => void;
+  width: number;
+  setWidth: (width: number) => void;
+  mobileOpen: boolean;
+  setMobileOpen: (open: boolean) => void;
+}
+
+const SidebarContext = createContext<SidebarContextType | null>(null);
+
+function clampWidth(value: number): number {
+  if (Number.isNaN(value)) return SIDEBAR_DEFAULT_WIDTH;
+  return Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, value));
+}
+
+function getStoredCollapsed(): boolean {
+  try {
+    return localStorage.getItem(COLLAPSED_STORAGE_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function getStoredWidth(): number {
+  try {
+    const raw = localStorage.getItem(WIDTH_STORAGE_KEY);
+    if (raw == null) return SIDEBAR_DEFAULT_WIDTH;
+    return clampWidth(Number.parseInt(raw, 10));
+  } catch {
+    return SIDEBAR_DEFAULT_WIDTH;
+  }
+}
+
+function writeCollapsed(value: boolean): void {
+  try {
+    localStorage.setItem(COLLAPSED_STORAGE_KEY, String(value));
+  } catch {
+    // NOTE: Ignore localStorage errors
+  }
+}
+
+export function SidebarProvider({ children }: { children: ReactNode }) {
+  const [collapsed, setCollapsedState] = useState<boolean>(getStoredCollapsed);
+  const [width, setWidthState] = useState<number>(getStoredWidth);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const setCollapsed = useCallback((next: boolean) => {
+    setCollapsedState(next);
+    writeCollapsed(next);
+  }, []);
+
+  const toggleCollapsed = useCallback(() => {
+    setCollapsedState((prev) => {
+      const next = !prev;
+      writeCollapsed(next);
+      return next;
+    });
+  }, []);
+
+  const setWidth = useCallback((next: number) => {
+    const clamped = clampWidth(next);
+    setWidthState(clamped);
+    try {
+      localStorage.setItem(WIDTH_STORAGE_KEY, String(clamped));
+    } catch {
+      // NOTE: Ignore localStorage errors
+    }
+  }, []);
+
+  // NOTE: coupled to HashRouter (see CLAUDE.md). SidebarProvider sits outside
+  // the Router in App.tsx so we cannot use useLocation here; listening to
+  // hashchange closes the mobile drawer on in-app navigation.
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const handler = () => setMobileOpen(false);
+    window.addEventListener("hashchange", handler);
+    return () => window.removeEventListener("hashchange", handler);
+  }, [mobileOpen]);
+
+  return (
+    <SidebarContext.Provider
+      value={{
+        collapsed,
+        setCollapsed,
+        toggleCollapsed,
+        width,
+        setWidth,
+        mobileOpen,
+        setMobileOpen,
+      }}
+    >
+      {children}
+    </SidebarContext.Provider>
+  );
+}
+
+export function useSidebar() {
+  const context = useContext(SidebarContext);
+  if (!context) {
+    throw new Error("useSidebar must be used within a SidebarProvider");
+  }
+  return context;
+}

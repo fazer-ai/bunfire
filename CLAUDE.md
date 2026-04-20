@@ -101,7 +101,11 @@ To narrow the takeover window for `bun set-admin`-created accounts, the Google l
 ## Frontend architecture
 
 - `ProtectedRoute` wraps children in `<Layout>` — page components must NOT wrap themselves in `<Layout>`, they render content only
-- Only `ProtectedRoute` (in `src/client/components/ProtectedRoute.tsx`) should render `<Layout>` — it is the single source of the app shell (header, nav, main content area)
+- Only `ProtectedRoute` (in `src/client/components/ProtectedRoute.tsx`) should render `<Layout>` — it is the single source of the app shell
+- `<Layout>` composes `<Header>` (logo, mobile hamburger, `<UserMenu>`) + `<Sidebar>` (desktop aside or Radix Dialog drawer on mobile) + `<main>`. Navigation items are defined centrally in `src/client/lib/navigation.tsx`
+- `<UserMenu>` (`src/client/components/UserMenu.tsx`) is the single entry point for user-level actions: theme picker, language picker, logout. Do not add those controls to the header or sidebar directly
+- `<SidebarProvider>` (`src/client/contexts/SidebarContext.tsx`) owns sidebar state: `collapsed` and `width` persisted in `localStorage` under `@app:sidebar-*`, plus `mobileOpen` for the drawer. Keyboard shortcut Cmd/Ctrl+B toggles collapse (via `useSidebarShortcut`)
+- `<TooltipProvider>` wraps the app in `App.tsx`; any `<Tooltip>` call (`src/client/components/Tooltip.tsx`) inherits a 200ms delay. `<Modal>`, `<Tooltip>`, `<Toast>`, `<Sidebar>` mobile drawer and `<UserMenu>` are all thin wrappers over Radix primitives (`@radix-ui/react-{dialog,tooltip,toast,dropdown-menu}`) to get focus trap, collision detection, and ARIA correctness for free
 
 ## Frontend env vars (`BUN_PUBLIC_*`)
 

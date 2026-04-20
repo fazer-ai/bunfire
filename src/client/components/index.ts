@@ -1,11 +1,14 @@
 export { Badge } from "./Badge";
+export { Breadcrumbs } from "./Breadcrumbs";
 export { Button } from "./Button";
 export { Card } from "./Card";
 export { GoogleSignInButton } from "./GoogleSignInButton";
+export { Header } from "./Header";
 export { Input } from "./Input";
-export { LanguagePicker } from "./LanguagePicker";
 export { Layout } from "./Layout";
 export { Modal } from "./Modal";
 export { ProtectedRoute } from "./ProtectedRoute";
-export { ThemePicker } from "./ThemePicker";
+export { Sidebar } from "./Sidebar";
 export { ToastProvider, useToast } from "./Toast";
+export { Tooltip } from "./Tooltip";
+export { UserMenu } from "./UserMenu";
