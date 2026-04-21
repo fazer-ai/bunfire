@@ -9,11 +9,14 @@ const mockUser = {
   name: null as string | null,
   passwordHash: "$2b$10$hashedpassword",
   role: "USER" as const,
+  googleId: null as string | null,
 };
 
 const mockPrisma = {
   user: {
-    findUnique: mock(() => Promise.resolve(null)),
+    findUnique: mock(
+      (): Promise<typeof mockUser | null> => Promise.resolve(null),
+    ),
   },
 };
 
@@ -21,9 +24,18 @@ mock.module("@/api/lib/prisma", () => ({
   default: mockPrisma,
 }));
 
+function base64urlToBase64(input: string): string {
+  const replaced = input.replace(/-/g, "+").replace(/_/g, "/");
+  const padLen = (4 - (replaced.length % 4)) % 4;
+  return replaced + "=".repeat(padLen);
+}
+
 describe("authPlugin", () => {
   beforeEach(() => {
-    mockPrisma.user.findUnique.mockReset();
+    // NOTE: mockClear preserves the default Promise.resolve(null) stub; using
+    // mockReset here would strip it and later tests would receive `undefined`
+    // from findUnique() instead of a Prisma-shaped async result.
+    mockPrisma.user.findUnique.mockClear();
   });
 
   describe("setAuthCookie", () => {
@@ -40,6 +52,10 @@ describe("authPlugin", () => {
       );
 
       expect(response.status).toBe(200);
+      // NOTE: happy-dom (registered via tests/setup.ts) strips `Set-Cookie`
+      // from Response headers as a forbidden response header. The cookie
+      // side effect is therefore only observable indirectly through the
+      // JWT returned by `setAuthCookie`, which we assert below.
       const data = await response.json();
       expect(data.token).toBeDefined();
       expect(typeof data.token).toBe("string");
@@ -47,7 +63,7 @@ describe("authPlugin", () => {
       const parts = data.token.split(".");
       expect(parts).toHaveLength(3);
 
-      const payload = JSON.parse(atob(parts[1]));
+      const payload = JSON.parse(atob(base64urlToBase64(parts[1])));
       expect(payload.userId).toBe(mockUser.id.toString());
       expect(payload.email).toBe(mockUser.email);
       expect(payload.role).toBe(mockUser.role);
@@ -67,7 +83,7 @@ describe("authPlugin", () => {
 
       const data = await response.json();
       const parts = data.token.split(".");
-      const payload = JSON.parse(atob(parts[1]));
+      const payload = JSON.parse(atob(base64urlToBase64(parts[1])));
 
       expect(payload.exp).toBeDefined();
       expect(payload.iat).toBeDefined();

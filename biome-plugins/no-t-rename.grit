@@ -10,7 +10,7 @@
 language js;
 
 or {
-    `const { t: $alias } = useTranslation($...)` where {
+    `const { t: $alias, $$$ } = useTranslation($...)` where {
         $alias <: not `t`,
         register_diagnostic(
             span = $alias,

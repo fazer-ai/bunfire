@@ -2,18 +2,25 @@ import {
   Globe,
   LayoutDashboard,
   LifeBuoy,
-  type LucideIcon,
   Settings,
   Shield,
 } from "lucide-react";
-import type { ComponentType, SVGProps } from "react";
+import type { ElementType, SVGProps } from "react";
 import { GithubIcon } from "@/client/components/icons/GithubIcon";
+
+// NOTE: ElementType (not ComponentType) so it fits lucide's ForwardRefExotic
+// components, inline React icons, and `<img>`-based brand marks without
+// per-item casts.
+export type NavItemIcon = ElementType<{
+  className?: string;
+  "aria-hidden"?: boolean | "true" | "false";
+}>;
 
 export interface NavItem {
   to: string;
   labelKey: string;
   defaultLabel: string;
-  icon: LucideIcon;
+  icon: NavItemIcon;
   // NOTE: bump to requiredRole if more roles are added
   requireAdmin?: boolean;
 }
@@ -54,7 +61,7 @@ export interface FooterLink {
   href: string;
   labelKey: string;
   defaultLabel: string;
-  icon: ComponentType<SVGProps<SVGSVGElement>>;
+  icon: ElementType<SVGProps<SVGSVGElement>>;
 }
 
 export interface SupportContact {
@@ -62,7 +69,7 @@ export interface SupportContact {
   defaultEmail: string;
   labelKey: string;
   defaultLabel: string;
-  icon: ComponentType<SVGProps<SVGSVGElement>>;
+  icon: ElementType<SVGProps<SVGSVGElement>>;
 }
 
 // NOTE: SUPPORT_LINK renders above SECONDARY_LINKS with a "Need help?" label

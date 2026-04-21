@@ -20,9 +20,6 @@ import { cn } from "@/client/lib/utils";
 // t('theme.auto', 'Auto')
 // t('theme.light', 'Light')
 // t('theme.dark', 'Dark')
-// t('theme.label', 'Theme')
-// t('language.label', 'Language')
-// t('auth.logout', 'Logout')
 const THEME_OPTIONS = [
   { value: "auto" as const, icon: Monitor, labelKey: "theme.auto" },
   { value: "light" as const, icon: Sun, labelKey: "theme.light" },
@@ -55,7 +52,12 @@ export function UserMenu() {
       <DropdownMenuPrimitive.Trigger asChild>
         <button
           type="button"
-          aria-labelledby={emailLabelId}
+          // NOTE: fallback to `nav.userMenu` when email is missing (auth
+          // bootstrap or partial-user states) so the trigger always has an
+          // accessible name. When present, `aria-labelledby` wins over
+          // `aria-label` and exposes the visible email instead.
+          aria-label={t("nav.userMenu", "User menu")}
+          aria-labelledby={user?.email ? emailLabelId : undefined}
           className="group inline-flex items-center gap-2 rounded-lg border border-border bg-bg-tertiary px-2 py-1.5 text-sm text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary data-[state=open]:bg-bg-hover data-[state=open]:text-text-primary"
         >
           <span
@@ -64,12 +66,14 @@ export function UserMenu() {
           >
             <UserRound className="h-4 w-4" />
           </span>
-          <span
-            id={emailLabelId}
-            className="hidden max-w-45 truncate sm:inline"
-          >
-            {user?.email}
-          </span>
+          {user?.email && (
+            <span
+              id={emailLabelId}
+              className="hidden max-w-45 truncate sm:inline"
+            >
+              {user.email}
+            </span>
+          )}
           <ChevronDown
             aria-hidden="true"
             className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180"
@@ -101,7 +105,7 @@ export function UserMenu() {
                   })}
                 >
                   <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  {/* biome-ignore lint/plugin: extracted via magic comments in THEME_OPTIONS */}
+                  {/* biome-ignore lint/plugin/no-dynamic-i18n-key: extracted via magic comments in THEME_OPTIONS */}
                   <span className="flex-1">{t(labelKey)}</span>
                   {selected && (
                     <Check

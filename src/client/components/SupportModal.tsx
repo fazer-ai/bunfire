@@ -32,6 +32,17 @@ export function SupportModal({
     };
   }, []);
 
+  // NOTE: reset the copy-feedback indicator when the modal closes so reopening
+  // it doesn't briefly flash the previous copied/error state.
+  useEffect(() => {
+    if (open) return;
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    setStatus("idle");
+  }, [open]);
+
   const handleCopy = async () => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     try {

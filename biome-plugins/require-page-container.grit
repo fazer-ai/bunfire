@@ -9,7 +9,8 @@
 //     `src/client/pages/settings/*.tsx` are intentionally out of scope: their
 //     parent layout already wraps `<Outlet />` in `<PageContainer>`.
 //
-// Exceptions (suppress with `// biome-ignore lint/plugin: <reason>`):
+// Exceptions (suppress with
+// `// biome-ignore lint/plugin/require-page-container: <reason>`):
 //   - Auth pages (LoginPage, SignupPage) that render their own centered
 //     layout outside the main app shell.
 //
@@ -27,6 +28,6 @@ language js;
     $body <: not contains `<PageContainer $.../>`,
     register_diagnostic(
         span = $name,
-        message = "Page components must render inside <PageContainer>. Import it from `@/client/components` and wrap the root JSX. If this page renders outside the main app shell (e.g. auth pages), suppress with `// biome-ignore lint/plugin: <reason>`."
+        message = "Page components must render inside <PageContainer>. Import it from `@/client/components` and wrap the root JSX. If this page renders outside the main app shell (e.g. auth pages), suppress with `// biome-ignore lint/plugin/require-page-container: <reason>`."
     )
 }

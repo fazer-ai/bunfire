@@ -31,6 +31,9 @@ describe("breadcrumbs", () => {
   test("ignores unknown segments silently", () => {
     const crumbs = buildBreadcrumbs("/settings/unknown");
     expect(crumbs).toHaveLength(1);
-    expect(crumbs[0]?.labelKey).toBe("settings.title");
+    expect(crumbs[0]).toMatchObject({
+      labelKey: "settings.title",
+      to: undefined,
+    });
   });
 });

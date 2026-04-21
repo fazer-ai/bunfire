@@ -14,8 +14,19 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-bg-primary">
+      {/* NOTE: under HashRouter, navigating to `#main-content` mutates
+          location.hash and the router would interpret it as a route change.
+          Intercept the click and focus the main element directly instead
+          (it already carries tabIndex={-1}). The anchor element is kept on
+          purpose because skip-links are conventionally a navigation control
+          (assistive tech surfaces them with anchor semantics). */}
+      {/* biome-ignore lint/a11y/useValidAnchor: skip link targets an on-page id with JS focus fallback; HashRouter makes raw hash navigation unsafe */}
       <a
         href="#main-content"
+        onClick={(e) => {
+          e.preventDefault();
+          document.getElementById("main-content")?.focus();
+        }}
         className="sr-only rounded-lg bg-accent px-3 py-1.5 text-accent-foreground text-sm focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-(--z-skip-link)"
       >
         {t("nav.skipToContent", "Skip to content")}

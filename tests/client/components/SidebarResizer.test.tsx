@@ -144,4 +144,46 @@ describe("SidebarResizer", () => {
     expect(hook?.collapsed).toBe(false);
     expect(hook?.width).toBe(SIDEBAR_MIN_WIDTH);
   });
+
+  test("pointer drag updates width and cleans body dataset on release", () => {
+    renderResizer();
+    const sep = getSeparator();
+    act(() => {
+      fireEvent.pointerDown(sep, {
+        pointerId: 1,
+        button: 0,
+        clientX: SIDEBAR_MIN_WIDTH,
+      });
+    });
+    expect(document.body.dataset.resizingSidebar).toBe("true");
+    act(() => {
+      fireEvent.pointerMove(sep, { pointerId: 1, clientX: 300 });
+    });
+    act(() => {
+      fireEvent.pointerUp(sep, { pointerId: 1, clientX: 300 });
+    });
+    expect(document.body.dataset.resizingSidebar).toBeUndefined();
+    expect(hook?.collapsed).toBe(false);
+    expect(hook?.width).toBe(300);
+  });
+
+  test("pointer drag below collapse snap collapses the sidebar", () => {
+    renderResizer();
+    const sep = getSeparator();
+    act(() => {
+      fireEvent.pointerDown(sep, {
+        pointerId: 1,
+        button: 0,
+        clientX: SIDEBAR_MIN_WIDTH,
+      });
+    });
+    act(() => {
+      fireEvent.pointerMove(sep, { pointerId: 1, clientX: 50 });
+    });
+    act(() => {
+      fireEvent.pointerUp(sep, { pointerId: 1, clientX: 50 });
+    });
+    expect(hook?.collapsed).toBe(true);
+    expect(document.body.dataset.resizingSidebar).toBeUndefined();
+  });
 });

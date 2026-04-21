@@ -31,12 +31,7 @@ export function Header() {
           aria-label={t("nav.home", "Home")}
           className="flex items-center gap-3"
         >
-          <img
-            src={getAssetUrl(logoPath)}
-            // t('common.logoAlt', 'Logo')
-            alt={t("common.logoAlt", "Logo")}
-            className="h-8 w-auto"
-          />
+          <img src={getAssetUrl(logoPath)} alt="" className="h-8 w-auto" />
         </Link>
       </div>
 

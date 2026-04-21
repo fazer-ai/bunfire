@@ -50,7 +50,7 @@ function SidebarNav({
       <ul className="flex flex-col gap-1">
         {items.map((item) => {
           const Icon = item.icon;
-          // biome-ignore lint/plugin: extracted via magic comments in src/client/lib/navigation.tsx
+          // biome-ignore lint/plugin/no-dynamic-i18n-key: extracted via magic comments in src/client/lib/navigation.tsx
           const label = t(item.labelKey, item.defaultLabel);
           const link = (
             <NavLink
@@ -113,7 +113,7 @@ function SidebarFooter({ collapsed = false, onNavigate }: SidebarFooterProps) {
   if (!SUPPORT_LINK && SECONDARY_LINKS.length === 0) return null;
 
   const supportEmail = SUPPORT_LINK
-    ? // biome-ignore lint/plugin: extracted via magic comments in src/client/lib/navigation.tsx
+    ? // biome-ignore lint/plugin/no-dynamic-i18n-key: extracted via magic comments in src/client/lib/navigation.tsx
       t(SUPPORT_LINK.emailKey, SUPPORT_LINK.defaultEmail)
     : null;
   const supportMailto = supportEmail ? `mailto:${supportEmail}` : null;
@@ -151,7 +151,7 @@ function SidebarFooter({ collapsed = false, onNavigate }: SidebarFooterProps) {
 
   let supportItem: ReactNode = null;
   if (SUPPORT_LINK) {
-    // biome-ignore lint/plugin: extracted via magic comments in src/client/lib/navigation.tsx
+    // biome-ignore lint/plugin/no-dynamic-i18n-key: extracted via magic comments in src/client/lib/navigation.tsx
     const label = t(SUPPORT_LINK.labelKey, SUPPORT_LINK.defaultLabel);
     const trigger = (
       <button
@@ -166,7 +166,7 @@ function SidebarFooter({ collapsed = false, onNavigate }: SidebarFooterProps) {
   }
 
   const secondaryItems = SECONDARY_LINKS.map((link) => {
-    // biome-ignore lint/plugin: extracted via magic comments in src/client/lib/navigation.tsx
+    // biome-ignore lint/plugin/no-dynamic-i18n-key: extracted via magic comments in src/client/lib/navigation.tsx
     const label = t(link.labelKey, link.defaultLabel);
     const isExternal = /^https?:\/\//.test(link.href);
     const trigger = (
@@ -270,20 +270,16 @@ function MobileSidebar({ items, open, onOpenChange }: MobileSidebarProps) {
             <Link
               to="/"
               onClick={() => onOpenChange(false)}
+              aria-label={t("nav.home", "Home")}
               className="flex items-center"
             >
-              <img
-                src={getAssetUrl(logoPath)}
-                // t('common.logoAlt', 'Logo')
-                alt={t("common.logoAlt", "Logo")}
-                className="h-7 w-auto"
-              />
+              <img src={getAssetUrl(logoPath)} alt="" className="h-7 w-auto" />
             </Link>
             <DialogPrimitive.Close
               aria-label={t("nav.closeMenu", "Close menu")}
               className="rounded-lg p-1 text-text-muted transition-colors hover:bg-bg-tertiary hover:text-text-primary"
             >
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4" aria-hidden="true" />
             </DialogPrimitive.Close>
           </div>
           <SidebarNav

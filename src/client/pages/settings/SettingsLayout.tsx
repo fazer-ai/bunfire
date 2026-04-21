@@ -56,7 +56,7 @@ export function SettingsLayout() {
               }
             >
               <Icon className="h-4 w-4" />
-              {/* biome-ignore lint/plugin: extracted via magic comments above TABS */}
+              {/* biome-ignore lint/plugin/no-dynamic-i18n-key: extracted via magic comments above TABS */}
               {t(tab.labelKey)}
             </NavLink>
           );

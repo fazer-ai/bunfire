@@ -20,6 +20,7 @@ export interface AuthUser {
   email: string;
   name: string | null;
   role: UserRole;
+  googleId: string | null;
 }
 
 export const authPlugin = new Elysia({ name: "auth" })
@@ -67,6 +68,7 @@ export const authPlugin = new Elysia({ name: "auth" })
             email: true,
             name: true,
             role: true,
+            googleId: true,
           },
         });
 

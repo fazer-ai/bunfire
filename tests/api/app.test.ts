@@ -45,7 +45,9 @@ describe("dev static plugin HTML bundling", () => {
     const res = await Bun.fetch(`${baseUrl}${match?.[1]}`);
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toMatch(/javascript/);
-    expect(Number(res.headers.get("content-length") ?? "0")).toBeGreaterThan(0);
+    // NOTE: skip content-length because chunked responses omit it
+    const body = await res.text();
+    expect(body.length).toBeGreaterThan(0);
   });
 
   test("bundled assets referenced by HTML are served", async () => {

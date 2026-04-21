@@ -18,6 +18,11 @@ export function SidebarResizer() {
   const pointerIdRef = useRef<number | null>(null);
   const dragStartWidthRef = useRef<number | null>(null);
   const dragStartCollapsedRef = useRef<boolean>(false);
+  // NOTE: when setPointerCapture throws (older Safari), we wire up
+  // document-level listeners instead so the drag still tracks the pointer
+  // after it leaves the 2px grip. This ref holds the detach function until
+  // the drag ends.
+  const documentListenersCleanupRef = useRef<(() => void) | null>(null);
 
   const cancelRaf = useCallback(() => {
     if (rafId.current != null) {
@@ -30,10 +35,12 @@ export function SidebarResizer() {
   useEffect(() => () => cancelRaf(), [cancelRaf]);
 
   // NOTE: defensive cleanup so a mid-drag unmount does not leave the body
-  // in a resizing state (locked cursor, disabled user-select).
+  // in a resizing state (locked cursor, disabled user-select) and no leaked
+  // document listeners from the Safari fallback path.
   useEffect(
     () => () => {
       delete document.body.dataset.resizingSidebar;
+      documentListenersCleanupRef.current?.();
     },
     [],
   );
@@ -51,12 +58,15 @@ export function SidebarResizer() {
   );
 
   const endDrag = useCallback(
-    (element: HTMLDivElement, pointerId: number) => {
-      try {
-        element.releasePointerCapture(pointerId);
-      } catch {
-        // NOTE: Ignore if the capture was already released or never held.
+    (element: HTMLDivElement | null, pointerId: number) => {
+      if (element) {
+        try {
+          element.releasePointerCapture(pointerId);
+        } catch {
+          // NOTE: Ignore if the capture was already released or never held.
+        }
       }
+      documentListenersCleanupRef.current?.();
       pointerIdRef.current = null;
       dragStartWidthRef.current = null;
       dragStartCollapsedRef.current = false;
@@ -74,15 +84,46 @@ export function SidebarResizer() {
       pointerIdRef.current = event.pointerId;
       dragStartWidthRef.current = width;
       dragStartCollapsedRef.current = collapsed;
+
+      let captured = false;
       try {
         event.currentTarget.setPointerCapture(event.pointerId);
+        captured = true;
       } catch {
-        // NOTE: older Safari throws on setPointerCapture; drag still works
-        // via the bubbling pointer events on the element.
+        // NOTE: older Safari throws on setPointerCapture; fall back to
+        // document listeners below so the drag still tracks the pointer.
       }
+
+      if (!captured) {
+        const onMove = (ev: PointerEvent) => {
+          if (pointerIdRef.current !== ev.pointerId) return;
+          pendingX.current = ev.clientX;
+          if (rafId.current != null) return;
+          rafId.current = requestAnimationFrame(() => {
+            rafId.current = null;
+            if (pendingX.current != null) applyX(pendingX.current);
+          });
+        };
+        const onEnd = (ev: PointerEvent) => {
+          if (pointerIdRef.current !== ev.pointerId) return;
+          const pending = pendingX.current;
+          endDrag(null, ev.pointerId);
+          if (pending != null) applyX(pending);
+        };
+        document.addEventListener("pointermove", onMove);
+        document.addEventListener("pointerup", onEnd);
+        document.addEventListener("pointercancel", onEnd);
+        documentListenersCleanupRef.current = () => {
+          document.removeEventListener("pointermove", onMove);
+          document.removeEventListener("pointerup", onEnd);
+          document.removeEventListener("pointercancel", onEnd);
+          documentListenersCleanupRef.current = null;
+        };
+      }
+
       document.body.dataset.resizingSidebar = "true";
     },
-    [collapsed, width],
+    [applyX, collapsed, endDrag, width],
   );
 
   const handlePointerMove = useCallback(
@@ -129,7 +170,10 @@ export function SidebarResizer() {
         endDrag(event.currentTarget, pointerIdRef.current);
         if (startWidth != null) {
           setCollapsed(startCollapsed);
-          if (!startCollapsed) setWidth(startWidth);
+          // NOTE: always restore startWidth so a drag-from-collapsed that
+          // briefly expanded (via applyX) does not leave the temporary
+          // dragged width as the remembered expanded width.
+          setWidth(startWidth);
         }
         return;
       }

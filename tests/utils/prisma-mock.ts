@@ -26,12 +26,28 @@ export const mockUser: MockUserEntity = {
 
 export type MockUser = MockUserEntity | null;
 
-export const mockFindFirst = mock(() => Promise.resolve(null as MockUser));
-export const mockFindUnique = mock(() => Promise.resolve(null as MockUser));
-export const mockCreate = mock(() => Promise.resolve(mockUser));
-export const mockUpdate = mock(() => Promise.resolve(mockUser));
-export const mockUpdateMany = mock(() => Promise.resolve({ count: 1 }));
-export const mockQueryRaw = mock(() => Promise.resolve([{ 1: 1 }]));
+export const mockFindFirst = mock<() => Promise<MockUser>>();
+export const mockFindUnique = mock<() => Promise<MockUser>>();
+export const mockCreate = mock<() => Promise<MockUserEntity>>();
+export const mockUpdate = mock<() => Promise<MockUserEntity>>();
+export const mockUpdateMany = mock<() => Promise<{ count: number }>>();
+export const mockQueryRaw =
+  mock<() => Promise<Array<Record<string, number>>>>();
+
+// NOTE: one place to keep the default async return values so declarations
+// and `resetPrismaMocks` can't drift out of sync. `mockReset()` clears the
+// impl, which would leave the mock returning `undefined` and silently break
+// any test that relied on the default.
+function applyDefaultPrismaMockImplementations() {
+  mockFindFirst.mockImplementation(() => Promise.resolve(null as MockUser));
+  mockFindUnique.mockImplementation(() => Promise.resolve(null as MockUser));
+  mockCreate.mockImplementation(() => Promise.resolve(mockUser));
+  mockUpdate.mockImplementation(() => Promise.resolve(mockUser));
+  mockUpdateMany.mockImplementation(() => Promise.resolve({ count: 1 }));
+  mockQueryRaw.mockImplementation(() => Promise.resolve([{ 1: 1 }]));
+}
+
+applyDefaultPrismaMockImplementations();
 
 export const prismaMock = {
   user: {
@@ -57,4 +73,5 @@ export function resetPrismaMocks() {
   mockUpdate.mockReset();
   mockUpdateMany.mockReset();
   mockQueryRaw.mockReset();
+  applyDefaultPrismaMockImplementations();
 }

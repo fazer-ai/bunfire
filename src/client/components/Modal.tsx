@@ -13,6 +13,9 @@ interface ModalProps {
   footer?: ReactNode;
   size?: "sm" | "md" | "lg";
   className?: string;
+  // NOTE: accessible name for the dialog when `title` is not rendered.
+  // Assistive tech otherwise sees an unnamed dialog.
+  ariaLabel?: string;
 }
 
 const sizeClasses = {
@@ -30,6 +33,7 @@ export function Modal({
   footer,
   size = "md",
   className,
+  ariaLabel,
 }: ModalProps) {
   const { t } = useTranslation();
   const contentRef = useRef<HTMLDivElement>(null);
@@ -68,7 +72,15 @@ export function Modal({
             e.preventDefault();
             pointerDownOutsideRef.current = true;
           }}
-          {...(description ? {} : { "aria-describedby": undefined })}
+          // NOTE: Radix Dialog warns in dev when Content has no Description
+          // child. Passing `undefined` explicitly acknowledges the absence so
+          // the warning is suppressed; when `description` is set below, Radix
+          // auto-wires the real id from the Description element's context.
+          aria-describedby={undefined}
+          // NOTE: when `title` renders a <DialogPrimitive.Title>, Radix wires
+          // `aria-labelledby` from it automatically. When no title is
+          // provided, `ariaLabel` gives the dialog an accessible name.
+          aria-label={!title && ariaLabel ? ariaLabel : undefined}
           className={cn(
             "data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 fixed top-1/2 left-1/2 z-(--z-modal) flex max-h-[calc(100vh-2rem)] w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-xl border border-border bg-bg-secondary focus:outline-none data-[state=closed]:animate-out data-[state=open]:animate-in",
             sizeClasses[size],

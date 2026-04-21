@@ -198,7 +198,7 @@ body[data-resizing-sidebar] * {
 
 /* While dragging the resizer, the sidebar width is driven by rAF; a CSS
    transition on width would fight the drag and feel laggy. */
-body[data-resizing-sidebar] aside {
+body[data-resizing-sidebar] #app-sidebar {
   transition: none !important;
 }
 

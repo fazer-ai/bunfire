@@ -9,14 +9,15 @@
 // - Does not track `t` passed as prop or aliased via `const x = t`.
 // - Does not flag missing magic comments (the extractor, not the linter,
 //   decides whether a comment is "near enough"). Presence of a dynamic
-//   call is the signal — pair with `// biome-ignore lint/plugin/noDynamicI18nKey`
-//   once the magic comments are in place.
+//   call is the signal — pair with
+//   `// biome-ignore lint/plugin/no-dynamic-i18n-key` once the magic
+//   comments are in place so only this rule is muted on the next line.
 language js;
 
 `t($first, $...)` where {
     $first <: not `"$_"`,
     register_diagnostic(
         span = $first,
-        message = "Dynamic i18n key: `i18next-parser` won't extract this. Add `// t('key.path', 'Default')` magic comments nearby (same file or any file listed in `i18next-parser.config.cjs`), then `// biome-ignore lint/plugin: extracted via magic comments` on this call."
+        message = "Dynamic i18n key: `i18next-parser` won't extract this. Add `// t('key.path', 'Default')` magic comments nearby (same file or any file listed in `i18next-parser.config.cjs`), then `// biome-ignore lint/plugin/no-dynamic-i18n-key: extracted via magic comments` on this call."
     )
 }

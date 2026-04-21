@@ -13,6 +13,7 @@ export function useSidebarShortcut() {
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
       // NOTE: ignore auto-repeat so holding the chord does not flap the sidebar.
       if (event.repeat) return;
       if (event.key !== "b" && event.key !== "B") return;

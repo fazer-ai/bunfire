@@ -93,5 +93,13 @@ export function buildBreadcrumbs(pathname: string): Breadcrumb[] {
       to: isLast ? undefined : path,
     });
   }
+
+  // NOTE: the isLast flag above is based on the raw segment index, so a path
+  // like `/settings/unknown` still marks the `settings` crumb as non-last and
+  // keeps it clickable. Override the final *matched* crumb to always be
+  // non-navigable — the user is already there as far as breadcrumbs care.
+  const last = crumbs[crumbs.length - 1];
+  if (last) last.to = undefined;
+
   return crumbs;
 }

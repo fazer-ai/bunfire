@@ -10,6 +10,6 @@ language js;
     $first <: not `"$_"`,
     register_diagnostic(
         span = $first,
-        message = "Dynamic i18n key: `i18next-parser` won't extract this. Add `// translate('key.path', 'Default')` magic comments nearby (same file or any file listed in `i18next-parser.api.config.cjs`), then `// biome-ignore lint/plugin: extracted via magic comments` on this call."
+        message = "Dynamic i18n key: `i18next-parser` won't extract this. Add `// translate('key.path', 'Default')` magic comments nearby (same file or any file listed in `i18next-parser.api.config.cjs`), then `// biome-ignore lint/plugin/no-dynamic-translate-key: extracted via magic comments` on this call."
     )
 }

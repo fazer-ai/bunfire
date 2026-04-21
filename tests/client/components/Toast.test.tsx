@@ -36,15 +36,20 @@ describe("Toast", () => {
   });
 
   test("updates existing toast by id instead of stacking", () => {
-    render(
+    const view = render(
       <ToastProvider>
         <Trigger message="First" id="same" />
       </ToastProvider>,
     );
-    const button = screen.getByRole("button", { name: "fire" });
-    act(() => button.click());
-    act(() => button.click());
-    expect(screen.getAllByText("First")).toHaveLength(1);
+    act(() => screen.getByRole("button", { name: "fire" }).click());
+    view.rerender(
+      <ToastProvider>
+        <Trigger message="Second" id="same" />
+      </ToastProvider>,
+    );
+    act(() => screen.getByRole("button", { name: "fire" }).click());
+    expect(screen.queryByText("First")).not.toBeInTheDocument();
+    expect(screen.getAllByText("Second")).toHaveLength(1);
   });
 
   test("throws when useToast used outside provider", () => {

@@ -40,6 +40,7 @@ const AUTH_USER_SELECT = {
   email: true,
   name: true,
   role: true,
+  googleId: true,
 } as const;
 
 export async function getUserByEmail(email: string) {
@@ -109,11 +110,10 @@ export async function linkGoogleIdToUser(
   if (result.count === 0) {
     const refetched = await prisma.user.findUnique({
       where: { id: userId },
-      select: { ...AUTH_USER_SELECT, googleId: true },
+      select: AUTH_USER_SELECT,
     });
     if (refetched?.googleId === googleId) {
-      const { googleId: _googleId, ...rest } = refetched;
-      return rest;
+      return refetched;
     }
     return null;
   }

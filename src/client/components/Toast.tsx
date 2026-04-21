@@ -110,12 +110,7 @@ function ToastItemView({
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
-  const toastsRef = useRef<ToastItem[]>([]);
   const pendingTimeoutsRef = useRef<Set<number>>(new Set());
-
-  useEffect(() => {
-    toastsRef.current = toasts;
-  }, [toasts]);
 
   useEffect(() => {
     const timeouts = pendingTimeoutsRef.current;
@@ -143,25 +138,42 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   const showToast = useCallback(
     (message: string, type: ToastType = "info", id?: string) => {
-      if (id) {
-        const existing = toastsRef.current.find((t) => t.id === id && t.open);
-        if (existing) {
-          setToasts((prev) =>
-            prev.map((t) =>
+      // NOTE: dedupe must be atomic against the latest state so back-to-back
+      // calls in the same tick still collapse to a single toast. Using the
+      // functional setState updater avoids a stale mirror via useRef.
+      setToasts((prev) => {
+        if (id) {
+          const existing = prev.find((t) => t.id === id && t.open);
+          if (existing) {
+            // NOTE: regenerate internalId so the ToastPrimitive.Root remounts
+            // (internalId is the React key) and Radix's auto-dismiss timer
+            // resets. Without this, a keyed replacement near the 5s expiry
+            // would disappear almost immediately.
+            return prev.map((t) =>
               t.internalId === existing.internalId
-                ? { ...t, message, type }
+                ? {
+                    ...t,
+                    internalId: generateInternalId(),
+                    message,
+                    type,
+                    open: true,
+                  }
                 : t,
-            ),
-          );
-          return;
+            );
+          }
         }
-      }
 
-      const internalId = generateInternalId();
-      setToasts((prev) => [
-        ...prev,
-        { internalId, id, message, type, open: true },
-      ]);
+        return [
+          ...prev,
+          {
+            internalId: generateInternalId(),
+            id,
+            message,
+            type,
+            open: true,
+          },
+        ];
+      });
     },
     [],
   );

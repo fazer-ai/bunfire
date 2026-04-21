@@ -81,22 +81,22 @@ describe("SidebarContext", () => {
     expect(localStorage.getItem("@app:sidebar-collapsed")).toBe("false");
   });
 
-  test("setWidth clamps and persists", () => {
+  test("setWidth clamps immediately and persists after debounce", async () => {
     renderProvider();
+
     act(() => hookValue?.setWidth(9999));
     expect(hookValue?.width).toBe(SIDEBAR_MAX_WIDTH);
-    expect(localStorage.getItem("@app:sidebar-width")).toBe(
-      String(SIDEBAR_MAX_WIDTH),
-    );
 
     act(() => hookValue?.setWidth(0));
     expect(hookValue?.width).toBe(SIDEBAR_MIN_WIDTH);
-    expect(localStorage.getItem("@app:sidebar-width")).toBe(
-      String(SIDEBAR_MIN_WIDTH),
-    );
 
     act(() => hookValue?.setWidth(300));
     expect(hookValue?.width).toBe(300);
+
+    // NOTE: persistence is debounced (~150ms) so only the final value lands
+    // in storage; wait past the window before asserting.
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    expect(localStorage.getItem("@app:sidebar-width")).toBe(String(300));
   });
 
   test("setMobileOpen toggles mobile state", () => {
@@ -144,5 +144,46 @@ describe("SidebarContext", () => {
       window.dispatchEvent(new Event("hashchange"));
     });
     expect(hookValue?.mobileOpen).toBe(false);
+  });
+
+  test("crossing the desktop breakpoint closes an open mobile drawer", () => {
+    const listeners: Array<(event: MediaQueryListEvent) => void> = [];
+    const mediaQueryList = {
+      matches: false,
+      media: "(min-width: 768px)",
+      onchange: null,
+      addEventListener: (
+        _type: string,
+        listener: (event: MediaQueryListEvent) => void,
+      ) => {
+        listeners.push(listener);
+      },
+      removeEventListener: (
+        _type: string,
+        listener: (event: MediaQueryListEvent) => void,
+      ) => {
+        const index = listeners.indexOf(listener);
+        if (index >= 0) listeners.splice(index, 1);
+      },
+      dispatchEvent: () => true,
+      addListener: () => {},
+      removeListener: () => {},
+    } as unknown as MediaQueryList;
+    const originalMatchMedia = window.matchMedia;
+    window.matchMedia = () => mediaQueryList;
+
+    try {
+      renderProvider();
+      act(() => hookValue?.setMobileOpen(true));
+      expect(hookValue?.mobileOpen).toBe(true);
+      act(() => {
+        for (const listener of [...listeners]) {
+          listener({ matches: true } as MediaQueryListEvent);
+        }
+      });
+      expect(hookValue?.mobileOpen).toBe(false);
+    } finally {
+      window.matchMedia = originalMatchMedia;
+    }
   });
 });

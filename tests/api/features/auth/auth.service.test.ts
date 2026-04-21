@@ -106,7 +106,13 @@ describe("auth.service", () => {
       await createUser("test@example.com", "hashedPassword");
       expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
-          select: { id: true, email: true, name: true, role: true },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            role: true,
+            googleId: true,
+          },
         }),
       );
     });

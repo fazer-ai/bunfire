@@ -1,14 +1,21 @@
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 
-interface TooltipProps {
+interface TooltipBaseProps {
   content: string;
-  children?: ReactNode;
   side?: "top" | "right" | "bottom" | "left";
   align?: "start" | "center" | "end";
   sideOffset?: number;
-  asChild?: boolean;
 }
+
+// NOTE: when `asChild` is true (default), children is passed directly as the
+// trigger via Radix Slot, which requires a single ReactElement — when absent,
+// the internal fallback button is used. When `asChild` is false, children is
+// wrapped by Radix Trigger, so any ReactNode is fine. The discriminated union
+// below surfaces that constraint at the type level instead of at runtime.
+type TooltipProps =
+  | (TooltipBaseProps & { asChild?: true; children?: ReactElement })
+  | (TooltipBaseProps & { asChild: false; children: ReactNode });
 
 // NOTE: when asChild=true (default), Radix Slot clones `children` and merges
 // props — including `className`. If the cloned child receives a function

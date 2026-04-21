@@ -82,14 +82,21 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setWidth = useCallback((next: number) => {
-    const clamped = clampWidth(next);
-    setWidthState(clamped);
-    try {
-      localStorage.setItem(WIDTH_STORAGE_KEY, String(clamped));
-    } catch {
-      // NOTE: Ignore localStorage errors
-    }
+    setWidthState(clampWidth(next));
   }, []);
+
+  // NOTE: debounce width persistence so pointer-driven resizes (fired per
+  // rAF) do not block on synchronous localStorage writes every frame.
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      try {
+        localStorage.setItem(WIDTH_STORAGE_KEY, String(width));
+      } catch {
+        // NOTE: Ignore localStorage errors
+      }
+    }, 150);
+    return () => window.clearTimeout(timeoutId);
+  }, [width]);
 
   // NOTE: coupled to HashRouter (see CLAUDE.md). SidebarProvider sits outside
   // the Router in App.tsx so we cannot use useLocation here; listening to
@@ -100,6 +107,18 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
     window.addEventListener("hashchange", handler);
     return () => window.removeEventListener("hashchange", handler);
   }, [mobileOpen]);
+
+  // NOTE: close the mobile drawer when the viewport crosses into the desktop
+  // breakpoint (md, 768px). Without this the Radix dialog stays mounted under
+  // the desktop sidebar if the user resizes or rotates after opening it.
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 768px)");
+    const handler = (e: MediaQueryListEvent) => {
+      if (e.matches) setMobileOpen(false);
+    };
+    mediaQuery.addEventListener("change", handler);
+    return () => mediaQuery.removeEventListener("change", handler);
+  }, []);
 
   return (
     <SidebarContext.Provider

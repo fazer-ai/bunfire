@@ -178,7 +178,7 @@ export function HomePage() {
                   type="button"
                   onClick={() =>
                     showToast(
-                      // biome-ignore lint/plugin: extracted via magic comments above TOAST_ACTIONS
+                      // biome-ignore lint/plugin/no-dynamic-i18n-key: extracted via magic comments above TOAST_ACTIONS
                       t(action.messageKey, action.defaultMessage),
                       action.type,
                     )
@@ -189,7 +189,7 @@ export function HomePage() {
                     className={cn("h-3.5 w-3.5", action.iconClass)}
                     aria-hidden="true"
                   />
-                  {/* biome-ignore lint/plugin: extracted via magic comments above TOAST_ACTIONS */}
+                  {/* biome-ignore lint/plugin/no-dynamic-i18n-key: extracted via magic comments above TOAST_ACTIONS */}
                   {t(action.labelKey, action.defaultLabel)}
                 </button>
               ))}

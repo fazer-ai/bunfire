@@ -1,11 +1,11 @@
 /// <reference lib="dom" />
 
-import { beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "bun:test";
 import { cleanup, render, screen } from "@testing-library/react";
 import { Button } from "@/client/components/Button";
 
 describe("Button", () => {
-  beforeEach(() => {
+  afterEach(() => {
     cleanup();
   });
 
@@ -20,6 +20,8 @@ describe("Button", () => {
 
     const button = screen.getByRole("button");
     expect(button).toHaveClass("bg-accent");
+    expect(button).toHaveClass("border");
+    expect(button).toHaveClass("border-transparent");
   });
 
   test("applies secondary variant styles", () => {
