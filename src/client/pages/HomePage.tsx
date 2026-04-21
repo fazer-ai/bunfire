@@ -8,7 +8,14 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Card, Modal, Tooltip, useToast } from "@/client/components";
+import {
+  Button,
+  Card,
+  Modal,
+  PageContainer,
+  Tooltip,
+  useToast,
+} from "@/client/components";
 import { useAuth } from "@/client/contexts/AuthContext";
 import { useThemedAsset } from "@/client/contexts/ThemeContext";
 import { cn, getAssetUrl } from "@/client/lib/utils";
@@ -94,7 +101,7 @@ export function HomePage() {
   const [modalOpen, setModalOpen] = useState(false);
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-8">
+    <PageContainer size="narrow" className="flex flex-col gap-8">
       <header className="flex flex-col items-center gap-4 text-center">
         <img
           src={getAssetUrl(logoPath)}
@@ -221,6 +228,6 @@ export function HomePage() {
           )}
         </p>
       </Modal>
-    </div>
+    </PageContainer>
   );
 }

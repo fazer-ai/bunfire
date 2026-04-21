@@ -65,6 +65,10 @@
       "plugins": ["./biome-plugins/no-dynamic-translate-key.grit"]
     },
     {
+      "includes": ["src/client/pages/*.tsx"],
+      "plugins": ["./biome-plugins/require-page-container.grit"]
+    },
+    {
       "includes": ["tests/**/*.{ts,tsx}"],
       "linter": {
         "rules": {

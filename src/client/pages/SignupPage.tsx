@@ -8,6 +8,7 @@ import { api } from "@/client/lib/api";
 import type { ApiErrorPayload } from "@/client/lib/types";
 import { cn } from "@/client/lib/utils";
 
+// biome-ignore lint/plugin: auth page renders its own centered layout outside <Layout>, so <PageContainer> does not apply
 export function SignupPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();

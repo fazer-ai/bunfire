@@ -1,7 +1,13 @@
 import { Loader2, Search, Shield, ShieldOff, Users } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Badge, Button, Card, useToast } from "@/client/components";
+import {
+  Badge,
+  Button,
+  Card,
+  PageContainer,
+  useToast,
+} from "@/client/components";
 import { useAuth } from "@/client/contexts/AuthContext";
 import { api } from "@/client/lib/api";
 import { cn, formatDate } from "@/client/lib/utils";
@@ -119,7 +125,7 @@ export function AdminPage() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <PageContainer className="space-y-6">
       <h1 className="font-bold text-2xl text-text-primary">
         {t("admin.title", "Admin Panel")}
       </h1>
@@ -325,6 +331,6 @@ export function AdminPage() {
           </>
         )}
       </Card>
-    </div>
+    </PageContainer>
   );
 }

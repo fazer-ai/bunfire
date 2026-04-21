@@ -111,7 +111,7 @@ function SidebarCollapseToggle({ collapsed }: { collapsed: boolean }) {
         aria-pressed={!collapsed}
         aria-controls="app-sidebar"
         aria-label={label}
-        className="absolute top-[33%] right-0 z-(--z-sidebar-toggle) flex h-6 w-6 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-bg-secondary text-text-secondary shadow-sm transition-[background-color,color] hover:bg-bg-hover hover:text-text-primary"
+        className="absolute top-[20%] right-0 z-(--z-sidebar-toggle) flex h-6 w-6 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-bg-secondary text-text-secondary shadow-sm transition-[background-color,color] hover:bg-bg-hover hover:text-text-primary"
       >
         <Icon className="h-3 w-3" />
       </button>

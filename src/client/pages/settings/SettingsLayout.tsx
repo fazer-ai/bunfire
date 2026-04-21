@@ -1,6 +1,7 @@
 import { Info, Palette, UserRound } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { NavLink, Outlet } from "react-router";
+import { PageContainer } from "@/client/components";
 import { cn } from "@/client/lib/utils";
 
 // t('settings.title', 'Settings')
@@ -23,7 +24,7 @@ export function SettingsLayout() {
   const { t } = useTranslation();
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6">
+    <PageContainer size="narrow" className="flex flex-col gap-6">
       <header>
         <h1 className="font-semibold text-text-primary text-xl">
           {t("settings.title", "Settings")}
@@ -63,6 +64,6 @@ export function SettingsLayout() {
       </nav>
 
       <Outlet />
-    </div>
+    </PageContainer>
   );
 }
