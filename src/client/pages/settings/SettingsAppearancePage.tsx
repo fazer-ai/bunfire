@@ -179,7 +179,7 @@ export function SettingsAppearancePage() {
     "en";
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="@container grid @3xl:grid-cols-2 grid-cols-1 gap-4">
       <Card>
         <h2 className="mb-1 font-semibold text-text-primary">
           {t("theme.label", "Theme")}
