@@ -27,6 +27,11 @@ export function formatDate(date: string | Date | null | undefined): string {
 import { CDN_URL } from "@/client/lib/env";
 
 export function getAssetUrl(path: string): string {
+  if (/^https?:\/\//i.test(path)) {
+    throw new Error(
+      `getAssetUrl received an absolute URL (${path}). Pass a bare asset path; useThemedAsset already applies the CDN prefix.`,
+    );
+  }
   if (!CDN_URL) return path;
   return `${CDN_URL}${path.startsWith("/") ? path : `/${path}`}`;
 }

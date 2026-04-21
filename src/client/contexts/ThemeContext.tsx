@@ -7,6 +7,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { getAssetUrl } from "@/client/lib/utils";
 
 type ThemePreference = "auto" | "light" | "dark";
 type ResolvedTheme = "light" | "dark";
@@ -93,11 +94,17 @@ export function useTheme() {
   return context;
 }
 
-export function useThemedAsset(path: string) {
+export interface ThemedAsset {
+  readonly src: string;
+}
+
+export function useThemedAsset(path: string): ThemedAsset {
   const { resolvedTheme } = useTheme();
   return useMemo(() => {
-    if (resolvedTheme === "dark") return path;
+    if (resolvedTheme === "dark") return { src: getAssetUrl(path) };
     const dot = path.lastIndexOf(".");
-    return `${path.slice(0, dot)}-light${path.slice(dot)}`;
+    return {
+      src: getAssetUrl(`${path.slice(0, dot)}-light${path.slice(dot)}`),
+    };
   }, [path, resolvedTheme]);
 }

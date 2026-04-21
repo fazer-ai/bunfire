@@ -21,7 +21,7 @@ import {
   SUPPORT_LINK,
   type SupportContact,
 } from "@/client/lib/navigation";
-import { cn, getAssetUrl } from "@/client/lib/utils";
+import { cn } from "@/client/lib/utils";
 import { SidebarResizer } from "./SidebarResizer";
 
 type SidebarVariant = "desktop" | "mobile";
@@ -249,7 +249,7 @@ interface MobileSidebarProps {
 
 function MobileSidebar({ items, open, onOpenChange }: MobileSidebarProps) {
   const { t } = useTranslation();
-  const logoPath = useThemedAsset("/assets/logo.png");
+  const logo = useThemedAsset("/assets/logo.png");
 
   // NOTE: avoid mounting a Radix Portal on desktop viewports; only attach the
   // dialog tree while the drawer is actually open.
@@ -273,7 +273,7 @@ function MobileSidebar({ items, open, onOpenChange }: MobileSidebarProps) {
               aria-label={t("nav.home", "Home")}
               className="flex items-center"
             >
-              <img src={getAssetUrl(logoPath)} alt="" className="h-7 w-auto" />
+              <img src={logo.src} alt="" className="h-7 w-auto" />
             </Link>
             <DialogPrimitive.Close
               aria-label={t("nav.closeMenu", "Close menu")}

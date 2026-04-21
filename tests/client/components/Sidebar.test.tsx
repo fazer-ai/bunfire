@@ -20,7 +20,7 @@ mock.module("@/client/contexts/AuthContext", () => ({
 }));
 
 mock.module("@/client/contexts/ThemeContext", () => ({
-  useThemedAsset: (path: string) => path,
+  useThemedAsset: (path: string) => ({ src: path }),
   useTheme: () => ({
     theme: "dark",
     resolvedTheme: "dark",

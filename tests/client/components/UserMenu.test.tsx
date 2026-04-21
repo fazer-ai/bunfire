@@ -30,7 +30,7 @@ mock.module("@/client/contexts/ThemeContext", () => ({
     resolvedTheme: "dark",
     setTheme: mockSetTheme,
   }),
-  useThemedAsset: (path: string) => path,
+  useThemedAsset: (path: string) => ({ src: path }),
   ThemeProvider: ({ children }: { children: ReactNode }) => children,
 }));
 

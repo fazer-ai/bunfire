@@ -5,13 +5,12 @@ import { Breadcrumbs } from "@/client/components/Breadcrumbs";
 import { UserMenu } from "@/client/components/UserMenu";
 import { useSidebar } from "@/client/contexts/SidebarContext";
 import { useThemedAsset } from "@/client/contexts/ThemeContext";
-import { getAssetUrl } from "@/client/lib/utils";
 
 export function Header() {
   const { t } = useTranslation();
   const { setMobileOpen } = useSidebar();
   const location = useLocation();
-  const logoPath = useThemedAsset("/assets/logo.png");
+  const logo = useThemedAsset("/assets/logo.png");
   const isHome = location.pathname === "/";
 
   return (
@@ -31,7 +30,7 @@ export function Header() {
           aria-label={t("nav.home", "Home")}
           className="flex items-center gap-3"
         >
-          <img src={getAssetUrl(logoPath)} alt="" className="h-8 w-auto" />
+          <img src={logo.src} alt="" className="h-8 w-auto" />
         </Link>
       </div>
 

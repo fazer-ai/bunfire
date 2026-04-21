@@ -18,7 +18,7 @@ import {
 } from "@/client/components";
 import { useAuth } from "@/client/contexts/AuthContext";
 import { useThemedAsset } from "@/client/contexts/ThemeContext";
-import { cn, getAssetUrl } from "@/client/lib/utils";
+import { cn } from "@/client/lib/utils";
 
 interface ToastAction {
   labelKey: string;
@@ -97,14 +97,14 @@ export function HomePage() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { showToast } = useToast();
-  const logoPath = useThemedAsset("/assets/logo.png");
+  const logo = useThemedAsset("/assets/logo.png");
   const [modalOpen, setModalOpen] = useState(false);
 
   return (
     <PageContainer size="narrow" className="flex flex-col gap-8">
       <header className="flex flex-col items-center gap-4 text-center">
         <img
-          src={getAssetUrl(logoPath)}
+          src={logo.src}
           alt={t("common.logoAlt", "Logo")}
           className="h-20 transition-all duration-300 hover:drop-shadow-accent"
         />
