@@ -21,7 +21,7 @@
     "set-admin": "bun scripts/set-admin.ts",
     "prisma:migrate": "prisma migrate dev",
     "prisma:generate": "prisma generate",
-    "i18n:extract": "i18next 'src/client/**/*.{ts,tsx}' --config i18next-parser.config.cjs && i18next 'src/api/**/*.ts' --config i18next-parser.api.config.cjs",
+    "i18n:extract": "bun scripts/i18n-extract.ts",
     "check": "bun run lint && bun run build-check && bun run i18n:extract && bun run test",
     "prepare": "husky"
   },
