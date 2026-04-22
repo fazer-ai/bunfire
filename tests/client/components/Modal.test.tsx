@@ -1,6 +1,6 @@
 /// <reference lib="dom" />
 
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, spyOn, test } from "bun:test";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { Modal } from "@/client/components/Modal";
@@ -46,6 +46,53 @@ describe("Modal", () => {
     expect(
       screen.getByRole("button", { name: /^close$/i }),
     ).toBeInTheDocument();
+  });
+
+  test("nested Modal stacks above its parent via depth-based z-index", () => {
+    const { baseElement } = render(
+      <Modal isOpen onClose={() => {}} title="Parent">
+        <Modal isOpen onClose={() => {}} title="Child">
+          <p>Child body</p>
+        </Modal>
+      </Modal>,
+    );
+    const dialogs = Array.from(
+      baseElement.querySelectorAll<HTMLElement>('[role="dialog"]'),
+    );
+    expect(dialogs.length).toBe(2);
+    const [parent, child] = dialogs as [HTMLElement, HTMLElement];
+    // Parent: no inline z-index, inherits Tailwind z-(--z-modal) token.
+    expect(parent.style.zIndex).toBe("");
+    // Child: inline calc() referencing the same CSS token, one step above.
+    expect(child.style.zIndex).toContain("var(--z-modal)");
+    expect(child.style.zIndex).toContain("+ 2");
+  });
+
+  test("warns once nesting reaches the --z-toast layer", () => {
+    const warn = spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      render(
+        <Modal isOpen onClose={() => {}} title="d0">
+          <Modal isOpen onClose={() => {}} title="d1">
+            <Modal isOpen onClose={() => {}} title="d2">
+              <Modal isOpen onClose={() => {}} title="d3">
+                <Modal isOpen onClose={() => {}} title="d4">
+                  <Modal isOpen onClose={() => {}} title="d5">
+                    <p>too deep</p>
+                  </Modal>
+                </Modal>
+              </Modal>
+            </Modal>
+          </Modal>
+        </Modal>,
+      );
+      const deepWarns = warn.mock.calls.filter((call) =>
+        String(call[0]).includes("--z-toast"),
+      );
+      expect(deepWarns.length).toBeGreaterThan(0);
+    } finally {
+      warn.mockRestore();
+    }
   });
 });
 
