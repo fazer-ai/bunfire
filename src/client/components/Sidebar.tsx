@@ -1,9 +1,10 @@
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, NavLink } from "react-router";
 
+import { useModalController } from "@/client/components/Modal";
 import { SupportModal } from "@/client/components/SupportModal";
 import { Tooltip } from "@/client/components/Tooltip";
 import { useAuth } from "@/client/contexts/AuthContext";
@@ -108,7 +109,7 @@ interface SidebarFooterProps {
 
 function SidebarFooter({ collapsed = false, onNavigate }: SidebarFooterProps) {
   const { t } = useTranslation();
-  const [supportOpen, setSupportOpen] = useState(false);
+  const supportModal = useModalController();
 
   if (!SUPPORT_LINK && SECONDARY_LINKS.length === 0) return null;
 
@@ -156,7 +157,7 @@ function SidebarFooter({ collapsed = false, onNavigate }: SidebarFooterProps) {
     const trigger = (
       <button
         type="button"
-        onClick={() => setSupportOpen(true)}
+        onClick={supportModal.open}
         className={cn(itemCls, "w-full")}
       >
         {renderBody(SUPPORT_LINK.icon, label)}
@@ -207,8 +208,7 @@ function SidebarFooter({ collapsed = false, onNavigate }: SidebarFooterProps) {
       </div>
       {supportEmail && supportMailto && (
         <SupportModal
-          open={supportOpen}
-          onOpenChange={setSupportOpen}
+          modal={supportModal}
           email={supportEmail}
           mailtoHref={supportMailto}
         />

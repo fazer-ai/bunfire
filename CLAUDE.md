@@ -110,6 +110,58 @@ To narrow the takeover window for `bun set-admin`-created accounts, the Google l
 - `<TooltipProvider>` wraps the app in `App.tsx`; any `<Tooltip>` call (`src/client/components/Tooltip.tsx`) inherits a 200ms delay. `<Modal>`, `<Tooltip>`, `<Toast>`, `<Sidebar>` mobile drawer and `<UserMenu>` are all thin wrappers over Radix primitives (`@radix-ui/react-{dialog,tooltip,toast,dropdown-menu}`) to get focus trap, collision detection, and ARIA correctness for free
 - `<PageContainer>` (`src/client/components/PageContainer.tsx`) is the single source of page-level max-width and horizontal centering. Every top-level page in `src/client/pages/*.tsx` must wrap its root JSX in `<PageContainer>`. Accepts `size="narrow" | "wide" | "full"` (default `"wide"`): `narrow` = `max-w-3xl` (forms, settings, reading), `wide` = `max-w-7xl` (dashboards, tables), `full` = no max-width (ultrawide tables, canvas). This rule is enforced by `biome-plugins/require-page-container.grit`, scoped to `src/client/pages/*.tsx`. Sub-pages under a layout route (e.g. `src/client/pages/settings/*.tsx`) are out of scope because their parent layout already wraps `<Outlet />` in `<PageContainer>`. Auth pages (Login, Signup) suppress the rule with `// biome-ignore lint/plugin: <reason>` because they render outside the main app shell
 
+## Modals
+
+The `<Modal>` component in `src/client/components/Modal.tsx` is the canonical wrapper for Radix Dialog. State is owned by a controller hook in the parent, and descendants pick it up via context. The shape:
+
+```tsx
+const modal = useModalController<License>();          // parent owns state
+
+<Button onClick={() => modal.open(license)}>Open</Button>
+<LicenseModal modal={modal} />                        // ALWAYS rendered
+
+function LicenseModal({ modal }: { modal: ModalController<License> }) {
+  return (
+    <Modal modal={modal} title="Attach license">
+      <Body />
+    </Modal>
+  );
+}
+
+function Body() {
+  const { payload: license, close } = useModal<License>();   // any descendant
+  // ...
+}
+```
+
+Rules:
+
+- **Always render the `<Modal>`, never `{flag && <Modal/>}`**. Radix keeps `Dialog.Root` alive through the exit animation via its internal `Presence` component. Unmounting the root skips the animation and snaps the modal closed. (This is why the `HelpFab` in older code animated correctly while newer wrappers didn't.)
+- **`useModalController<T>(opts?)`** returns `{ isOpen, payload, open, close }`. `payload` is retained across `close()` so the body can keep rendering real data while Radix plays the exit animation; it's only overwritten on the next `open()`. Don't clear it in `close()`.
+- **`useModal<T>()`** is the descendant hook. Reads the controller from context that `<Modal>` provides. Use it in body/footer/submodals to avoid prop drilling. Throws if used outside a `<Modal modal={...}>` subtree.
+- **`useOnModalOpen(modal, effect)`** fires `effect` each time the controller's `isOpen` transitions from `false` to `true` (with optional cleanup on close). Use it for per-open state resets (form defaults, prefilled fields, etc.). It takes the controller directly (not `modal.isOpen`) because the hook is typically called in the wrapper component *before* `<Modal>` mounts its context provider; tried the context-only variant but it crashes at runtime for that reason. Don't reach for `useEffect(..., [modal.isOpen])` by hand — `useOnModalOpen` makes the intent explicit and is the pattern the biome plugin recognizes.
+- **`closeOnOutsideClick={false}`** for flows where accidental dismiss is costly (pricing, checkout, destructive confirmation). Esc still closes.
+- **`onCloseRequest`** intercepts user-driven close (Esc, outside click, X). The handler is responsible for eventually calling `modal.close()` (or not), typically after a confirmation submodal. Programmatic `modal.close()` calls from the parent are unaffected.
+
+Nested modals stack automatically: `<Modal>` reads a depth from context and computes its `z-index` as `calc(var(--z-modal) + depth * 2)`. The overlay sits one step below the content. A warning fires once nesting depth reaches 5 (which collides with `--z-toast` at 90). If you need deeper nesting, bump the z-index tokens in `public/index.css` instead of silencing the warning.
+
+Enforced by `biome-plugins/always-render-modal.grit` (scoped to `src/client/**`): any JSX element whose name matches `*Modal` (or the bare `<Modal>`) wrapped in a `{cond && ...}` short-circuit or a `{cond ? ... : null}` ternary fails lint. The plugin rejects the unmount-on-close anti-pattern directly; the fix is to lift state into `useModalController` and always render the wrapper.
+
+### Modal + async flows (future guidance)
+
+The template's two modals (HomePage playground and `SupportModal`) are sync; the patterns below aren't needed for them. They come from ~7 rounds of review on heavily-async modals in a downstream project and are worth reaching for once a modal starts fetching or mutating on the backend. Keep the list by your side when you add the first "modal that makes an API call" to your app.
+
+- **Drop stale responses with a session token.** Bump a `sessionRef = useRef(0)` in `useOnModalOpen` (and inside any action that re-fetches). Async callbacks capture the current token; on return, bail if `sessionRef.current` changed. Prevents close+reopen races and payload switches from flashing wrong data or spawning child modals for the wrong entity.
+- **Parent close invalidates nested state.** When a modal owns child modals (parent opens a nested one while open), return a cleanup from `useOnModalOpen` that bumps the session token and calls `child.close()`. Without this, child dialogs linger past the parent session.
+- **Guard user-driven close while loading.** During an in-flight request, set `onCloseRequest` to a no-op (or a confirmation) AND `disabled={loading}` on Cancel/Confirm/row triggers. The typical bug this catches: a stale `onSuccess` firing and closing a freshly reopened session.
+- **Confirm modals: close only on success.** Handlers for confirm-delete/detach/disable return `boolean`; the parent closes the confirm modal only on `true`. Failures stay on-screen so the user can retry without re-opening.
+- **Skip resync effects when closing.** If the parent effect that writes into the modal's state runs during close (typical on a refetch-on-data-change pattern), guard it with `if (!isOpen) return`. Otherwise a late fetch can resurrect a modal mid-animation.
+- **`useOnModalOpen` + `useEffect([payload.id])` together.** `useOnModalOpen` catches reopen transitions only. For modals that stay open across in-place payload swaps (`open(newPayload)` without closing first), pair it with a `useEffect` keyed on the payload's identity so state resets in both cases.
+- **Force re-fetch on reopen with a `fetchCounter`.** If the id driving `fetchData` (instance id, user id) hasn't changed but the modal reopened and needs fresh data, keep `[counter, setCounter] = useState(0)` bumped in `useOnModalOpen` and include it in `useCallback`'s dep list. The callback identity changes, so dependent effects re-run.
+- **URL-driven auto-open is mount-only.** Effects that open a modal from a URL param (`?cart=1` → open acquire modal) should run once on mount (`[]` deps). Including the modal controller in deps re-runs on every open/close.
+- **Check the `{ error }` branch from the typed client.** Elysia's typed client returns `{ data, error }` from mutations. Inside a modal's submit handler, inspect `error` explicitly, surface the API message, and do NOT close the modal on error.
+- **Prefer titled modals.** Every modal in practice ended up with a title; `ariaLabel`-only flows needed shims and drifted visually. The template keeps `title?: string` optional for flexibility, but the default answer is "give it a title".
+
 ## Frontend env vars (`BUN_PUBLIC_*`)
 
 - Env vars exposed to the client must be prefixed `BUN_PUBLIC_` and declared in `build.ts` under `define` (e.g. `"process.env.BUN_PUBLIC_CDN_URL": JSON.stringify(...)`). Without the `define` entry, the value is not inlined into the bundle

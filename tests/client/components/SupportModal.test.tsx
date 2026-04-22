@@ -8,7 +8,8 @@ import {
   render,
   screen,
 } from "@testing-library/react";
-import { useState } from "react";
+import { useEffect, useRef } from "react";
+import { useModalController } from "@/client/components/Modal";
 import { SupportModal } from "@/client/components/SupportModal";
 
 const mockWriteText = mock(async (_: string) => {});
@@ -26,15 +27,14 @@ function ControlledSupportModal({
   email?: string;
   mailto?: string;
 }) {
-  const [open, setOpen] = useState(true);
-  return (
-    <SupportModal
-      open={open}
-      onOpenChange={setOpen}
-      email={email}
-      mailtoHref={mailto}
-    />
-  );
+  const modal = useModalController();
+  const openedRef = useRef(false);
+  useEffect(() => {
+    if (openedRef.current) return;
+    openedRef.current = true;
+    modal.open();
+  }, [modal]);
+  return <SupportModal modal={modal} email={email} mailtoHref={mailto} />;
 }
 
 describe("SupportModal", () => {
@@ -80,7 +80,7 @@ describe("SupportModal", () => {
     ).toBeInTheDocument();
   });
 
-  test("close button triggers onOpenChange(false)", () => {
+  test("footer close button closes the modal", () => {
     render(<ControlledSupportModal />);
     // NOTE: two buttons match /close/i (header X and footer Close). Take the
     // footer one, which renders inside the dialog footer region.

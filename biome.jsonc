@@ -57,7 +57,8 @@
       "includes": ["src/client/**/*.{ts,tsx}"],
       "plugins": [
         "./biome-plugins/no-dynamic-i18n-key.grit",
-        "./biome-plugins/no-t-rename.grit"
+        "./biome-plugins/no-t-rename.grit",
+        "./biome-plugins/always-render-modal.grit"
       ]
     },
     {

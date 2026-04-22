@@ -3,28 +3,23 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/client/lib/utils";
 import { Button } from "./Button";
-import { Modal } from "./Modal";
+import { Modal, type ModalController } from "./Modal";
 
 interface SupportModalProps {
   email: string;
   mailtoHref: string;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  modal: ModalController<void>;
 }
 
 type CopyStatus = "idle" | "copied" | "error";
 
 const FEEDBACK_DURATION_MS = 1500;
 
-export function SupportModal({
-  email,
-  mailtoHref,
-  open,
-  onOpenChange,
-}: SupportModalProps) {
+export function SupportModal({ email, mailtoHref, modal }: SupportModalProps) {
   const { t } = useTranslation();
   const [status, setStatus] = useState<CopyStatus>("idle");
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { isOpen, close } = modal;
 
   useEffect(() => {
     return () => {
@@ -35,13 +30,13 @@ export function SupportModal({
   // NOTE: reset the copy-feedback indicator when the modal closes so reopening
   // it doesn't briefly flash the previous copied/error state.
   useEffect(() => {
-    if (open) return;
+    if (isOpen) return;
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
     setStatus("idle");
-  }, [open]);
+  }, [isOpen]);
 
   const handleCopy = async () => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -77,17 +72,12 @@ export function SupportModal({
 
   return (
     <Modal
-      isOpen={open}
-      onClose={() => onOpenChange(false)}
+      modal={modal}
       title={t("support.title", "Contact support")}
       size="sm"
       footer={
         <div className="flex justify-end gap-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => onOpenChange(false)}
-          >
+          <Button variant="secondary" size="sm" onClick={close}>
             {t("common.close", "Close")}
           </Button>
           <Button

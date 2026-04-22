@@ -6,7 +6,6 @@ import {
   MessageSquare,
   XCircle,
 } from "lucide-react";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Button,
@@ -14,6 +13,7 @@ import {
   Modal,
   PageContainer,
   Tooltip,
+  useModalController,
   useToast,
 } from "@/client/components";
 import { useAuth } from "@/client/contexts/AuthContext";
@@ -98,7 +98,7 @@ export function HomePage() {
   const { user } = useAuth();
   const { showToast } = useToast();
   const logo = useThemedAsset("/assets/logo.png");
-  const [modalOpen, setModalOpen] = useState(false);
+  const exampleModal = useModalController();
 
   return (
     <PageContainer size="narrow" className="flex flex-col gap-8">
@@ -153,7 +153,7 @@ export function HomePage() {
                 "Radix Dialog with focus trap and focus return to the trigger.",
               )}
             </p>
-            <Button size="sm" onClick={() => setModalOpen(true)}>
+            <Button size="sm" onClick={exampleModal.open}>
               {t("home.playground.modal.trigger", "Open modal")}
             </Button>
           </section>
@@ -199,12 +199,11 @@ export function HomePage() {
       </Card>
 
       <Modal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
+        modal={exampleModal}
         title={t("home.playground.modal.title", "Example modal")}
         footer={
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" onClick={() => setModalOpen(false)}>
+            <Button variant="secondary" onClick={exampleModal.close}>
               {t("home.playground.modal.cancel", "Cancel")}
             </Button>
             <Button
@@ -213,7 +212,7 @@ export function HomePage() {
                   t("home.playground.modal.confirmed", "Modal confirmed"),
                   "success",
                 );
-                setModalOpen(false);
+                exampleModal.close();
               }}
             >
               {t("home.playground.modal.confirm", "Confirm")}

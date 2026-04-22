@@ -1,0 +1,65 @@
+// Flags the `{cond && <XxxModal .../>}` short-circuit anti-pattern (and its
+// `cond ? <XxxModal .../> : null` twin). Unmounting the Radix `Dialog.Root`
+// via a short-circuit expression kills the exit animation: Radix keeps the
+// content mounted through `data-state="closed"` for the animation's duration,
+// but only while the `Dialog.Root` parent is alive. Dropping the wrapper on
+// the same tick skips the transition entirely and the modal snaps closed.
+//
+// The fix is to lift state into `useModalController()` in the parent and
+// always render the wrapper: `<XxxModal modal={controller} .../>`. The
+// controller's `isOpen` drives Radix, and the wrapper stays mounted.
+//
+// Scope (configured in `biome.jsonc`):
+//   - `src/client/**`.
+//
+// Heuristic:
+//   - JSX tag name must match `/Modal$/` (PascalCase). Component names like
+//     `<Modal>`, `<SupportModal>`, `<InstanceModal>` are caught; arbitrary
+//     names are not. This is intentional — it's the signal "this component
+//     owns a Radix Dialog.Root".
+//
+// Limitations:
+//   - Namespaced elements (`<Foo.Modal>`) are not matched. The convention in
+//     this repo is to export wrappers directly; namespaced access is rare.
+//   - `cond ? null : <XxxModal/>` (negated ternary) is not flagged — less
+//     common than the normal form. Add it if it shows up in practice.
+//   - GritQL has no scope analysis, so the plugin only inspects the syntactic
+//     shape of the call site. Hiding the anti-pattern behind a helper
+//     component escapes detection.
+//
+// Suppress with `// biome-ignore lint/plugin/always-render-modal: <reason>` on the
+// line above the expression. Only genuine exceptions — e.g. a `*Modal`-named
+// component that does not render a Radix Dialog.Root internally (consider
+// renaming instead).
+language js;
+
+or {
+    `$_ && <$name $... />` where {
+        $name <: r".*Modal$",
+        register_diagnostic(
+            span = $name,
+            message = "`{cond && <XxxModal/>}` unmounts the Radix Dialog.Root before the exit animation plays. Lift state with `const m = useModalController()` in the parent and render the wrapper unconditionally: `<XxxModal modal={m} .../>`."
+        )
+    },
+    `$_ && <$name $...>$_</$name>` where {
+        $name <: r".*Modal$",
+        register_diagnostic(
+            span = $name,
+            message = "`{cond && <XxxModal>...</XxxModal>}` unmounts the Radix Dialog.Root before the exit animation plays. Lift state with `const m = useModalController()` in the parent and render the wrapper unconditionally: `<XxxModal modal={m} .../>`."
+        )
+    },
+    `$_ ? <$name $... /> : null` where {
+        $name <: r".*Modal$",
+        register_diagnostic(
+            span = $name,
+            message = "`{cond ? <XxxModal/> : null}` unmounts the Radix Dialog.Root before the exit animation plays. Lift state with `const m = useModalController()` in the parent and render the wrapper unconditionally: `<XxxModal modal={m} .../>`."
+        )
+    },
+    `$_ ? <$name $...>$_</$name> : null` where {
+        $name <: r".*Modal$",
+        register_diagnostic(
+            span = $name,
+            message = "`{cond ? <XxxModal>...</XxxModal> : null}` unmounts the Radix Dialog.Root before the exit animation plays. Lift state with `const m = useModalController()` in the parent and render the wrapper unconditionally: `<XxxModal modal={m} .../>`."
+        )
+    }
+}
