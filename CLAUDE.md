@@ -171,6 +171,18 @@ The template's two modals (HomePage playground and `SupportModal`) are sync; the
 - The `define` substitution is textual against the literal `process.env.BUN_PUBLIC_X`. Computed access (`process.env[key]`) does not get inlined, so each var must be read by its literal name in `env.ts`
 - This rule is enforced by a Biome GritQL plugin at `biome-plugins/no-bun-public-env.grit`, scoped via `overrides` in `biome.jsonc` to `src/client/**` minus `env.ts`. Violations fail `bun lint`
 
+### Propagating a new `BUN_PUBLIC_*` through the build pipeline
+
+The `define` substitution happens at `bun run build` time, so every layer between the CI secret store and that command must forward the variable explicitly. A value set only in GitHub repo secrets but not forwarded ships as an **empty string** in the bundle with no build-time or runtime error. `BUN_PUBLIC_CDN_URL` is the existing reference implementation; mirror it when adding a new var:
+
+1. Declare in `build.ts` under `define` (see above)
+2. Read via `src/client/lib/env.ts` (see above)
+3. In `Dockerfile`, add an `ARG name=""` + `ENV name=$name` pair **before** the `RUN bun run build` step (see `BUN_PUBLIC_CDN_URL` at lines 16-17)
+4. In `.github/workflows/publish_github_package.yml`, wire it in **both** places: the `Build frontend assets` step's `env:` block (used for R2 asset upload) **and** the `docker/build-push-action`'s `build-args:` block (used for the image build). Missing either one leaves that half of the pipeline shipping an empty value
+5. Add the matching secret in GitHub repo settings (`secrets.BUN_PUBLIC_X`)
+
+If a var is environment-specific and not a secret (e.g., a public URL that differs per deploy), use `vars.X` instead of `secrets.X` in the workflow, but the propagation steps are identical.
+
 ## Theming
 
 - All colors are CSS custom properties defined in the `@theme` block in `public/index.css` (dark mode defaults). Light mode overrides live in the `html[data-theme="light"]` block in the same file
